@@ -23,7 +23,7 @@ import jinja2
 import webapp2
 
 from google.appengine.ext import db
-from boto.mturk.connection import MTurkConnection
+#from boto.mturk.connection import MTurkConnection
 
 #This line taken from google app engine tutorial
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -46,7 +46,8 @@ class DrawingPage(webapp2.RequestHandler):
         q = db.GqlQuery("SELECT * FROM Turker")
         linesJson = q #need to grab just the list of json objects from each line of the q
         '''
-        template_values = {'linesFromDB':linesJson}
+        #template_values = {'linesFromDB':linesJson}
+        template_values = {}
         template = JINJA_ENVIRONMENT.get_template('drawing.html')
         self.response.write(template.render(template_values))
 
