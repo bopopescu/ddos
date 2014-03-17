@@ -1,0 +1,102 @@
+tr { 
+	vertical-align: top;
+}
+
+body {
+	background-image:url('http://i.imgur.com/G32Hj4p.png');
+	background-size:87%;
+	background-repeat:no-repeat;
+    background-attachment:fixed;
+	padding: 20px;
+}
+
+td
+{
+	background:	transparent;
+	/*border-style: solid;
+	border-width: 1px;
+	border-color: #000;*/
+	width: 30%;
+
+}
+
+.loader {
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 9999;
+}
+
+img
+{
+
+	/*margin-left:auto;
+	margin-right:auto;
+    margin-top:5px;*/
+}
+
+h2
+{
+    color:rgb(0,112,192) !important;
+}
+
+a
+{
+    text-decoration: none;
+    color:rgb(47,85,151);
+    font-family: "wf_SegoeUILight","wf_SegoeUI","Segoe UI Light","Segoe WP Light","Segoe UI","Segoe","Segoe WP","Tahoma","Verdana","Arial","sans-serif";
+}
+
+.crop { width: 368px; height: 207px; overflow: hidden; }
+.crop img { width: 100%; }
+.crop text {color: rgb(255,0,0)}
+
+.artist
+{
+    margin-left:8px;
+	margin-right:8px;
+    margin-top:8px;
+    font-family: "wf_SegoeUILight","wf_SegoeUI","Segoe UI Light","Segoe WP Light","Segoe UI","Segoe","Segoe WP","Tahoma","Verdana","Arial","sans-serif";
+    
+    background:rgb(255,255,255);
+    border-style:solid;
+    border-width:1px;
+    padding: 8px;
+    width:378px;
+    /*font-family: Segoe UI Light;
+    font-weight: lighter;*/
+}
+
+.imgAndTag{
+    position:relative;
+}
+
+.tag{
+    position:absolute;
+    margin-top:-33px;
+    /*margin-left:194px;*/
+    right:5px;
+    margin-right:8px;
+    background-color:rgba(127,127,127, 0.8);
+    padding-right:2px;
+    padding-left:2px;
+}
+
+
+.frame
+{
+width:378px;
+}
+
+.top{
+
+}
+
+
+
+/*span
+{
+	width:90%;
+}*/
