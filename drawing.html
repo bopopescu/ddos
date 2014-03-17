@@ -22,23 +22,28 @@ function init() {
     ctx = canvas.getContext("2d");
     w = canvas.width;
     h = canvas.height;
-
-    canvas.addEventListener("mousemove", function (e) {
-        findxy('move', e)
-    }, false);
-    canvas.addEventListener("mousedown", function (e) {
-        findxy('down', e)
-    }, false);
-    canvas.addEventListener("mouseup", function (e) {
-        findxy('up', e)
-    }, false);
-    canvas.addEventListener("mouseout", function (e) {
-        findxy('out', e)
-    }, false);
+    
+    canvas.onselectstart = function () { return false; } // ie
+    canvas.onmousedown = function () { return false; } // mozilla
     
     //draw the list of lines sent by python server
     //startingLines = {}
     {#startingLines.append({{linesFromDB[startX]}})#}
+    
+    $('#idBox').bind('input', function(e){
+        canvas.addEventListener("mousemove", function (e) {
+        findxy('move', e)
+        }, false);
+        canvas.addEventListener("mousedown", function (e) {
+            findxy('down', e)
+        }, false);
+        canvas.addEventListener("mouseup", function (e) {
+            findxy('up', e)
+        }, false);
+        canvas.addEventListener("mouseout", function (e) {
+            findxy('out', e)
+        }, false);
+    });
 }
 
 function draw() {
@@ -56,12 +61,7 @@ function draw() {
                     };
     index = index + 1;
 }
-/*
-function erase() {
-    ctx.clearRect(0, 0, w, h);
-    document.getElementById("canvasimg").style.display = "none";
-}
-*/
+
 function findxy(action, e) {
     if (action == 'down') {
         prevX = currX;
@@ -87,7 +87,7 @@ function findxy(action, e) {
             index = index + 1;
         }
     }
-    if ((action == 'up' || action == "out") && !preventResubmission) {
+    if ((action == "up" || action == "out") && !preventResubmission) {
         if(mouseIsDown){
             mouseIsDown = false;
             preventResubmission = true;
@@ -128,5 +128,6 @@ function submit() {
     <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
     <!--input type="button" value="clear" id="clr" size="23" onclick="erase()" style="position:absolute;top:80%;left:15%;"-->
     <!--input type="button" value="submit" id="sub" size="30" onclick="submit()" style="position:absolute;top:50%;left:50%;"-->
+    <input type="text" id="idBox" width="100" height="50" style="position:absolute;top:5%;left:10%;" ></input>
     </body>
 </html>
