@@ -12,6 +12,7 @@ var canvas, ctx, mouseIsDown = false,
     dot_flag = false,
     preventResubmission = false;
 
+var drawing_id = {{ drawing_id }};
 var lines = {};
 var old_lines = {};
 var index = 0;
@@ -120,16 +121,13 @@ function findxy(action, e) {
 }
 
 function submit() {
-    $.ajax(
-    {
-        url:'/thanks',
+    $.ajax({
+        url:'/'+drawing_id,
         type: 'post',
         data:JSON.stringify(lines),
         contentType:'application/json',
         processData: false
-    }).done(function(responseData)
-    {
-        //console.log("Response Recieved: ajax post success)
+    }).done(function(responseData) {
         document.write(responseData)
     });
 }
