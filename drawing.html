@@ -124,7 +124,7 @@ function submit() {
     $.ajax({
         url:'/'+drawing_id,
         type: 'post',
-        data:JSON.stringify(lines),
+        data: JSON.stringify({'lines':lines, 'turkerID':document.getElementById('idBox').value}),
         contentType:'application/json',
         processData: false
     }).done(function(responseData) {

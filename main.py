@@ -63,29 +63,23 @@ class DrawingPage(webapp2.RequestHandler):
     def post(self, drawing_id):
         self.stroke = Stroke()
         dataSent = json.loads(self.request.body)
-        for line in dataSent:
-            self.stroke.lines.append(json.dumps(dataSent[line]))
 
-        # check here for if the stroke id is on the blocked list
-            #if not, procede and add to block list, if not return - display err message
-        #blocking worker wont help since each hit only has 1 person doing it (blocks only apply to a single hit)
-        #instead, just keep a list of the worker id's that are ppl who have worked on any of our HITs.  reject any that are already on the list
-        '''
-        query = db.GQL()
-        blockedIDs = []
-        for blockedID in query.BlockedWorkerList:
-            blockedIDs.append(blockedID)
-        if workerID in blockedIDs:
-            #do not write the lines to the server (ie. dont put the stroke object)
-            #redirect to another page saying they didnt follow directions and wont be paid
-            self.redirect('/brokeRules')
-        else:
-            self.blockedWorkerList = BlockedWorkerList()
-            self.blockedWorkerList.blockedList.append(workerID)
-            self.blockedWorkerList.put()
-        '''
-        self.stroke.put()
-        self.redirect('/thanks')
+        q = db.GqlQuery("SELECT blockedList FROM Drawing")
+        for drawing in q:
+            if dataSent['turkerID'] in drawing.blockedList:
+                #reject the turker - do not approve 
+                #redirect page to some kind of err for them
+                self.redirect('/thanks')
+            else:
+                #approve job
+                #add to blocked list
+                drawing.blockedList.append(dataSent['turkerID'])
+                drawing.put()
+                #save lines
+                for line in dataSent['lines']:
+                    self.turker.lines.append(json.dumps(dataSent['lines'][line]))
+                self.turker.put()
+                self.redirect('/thanks')
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
