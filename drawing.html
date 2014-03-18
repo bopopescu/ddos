@@ -35,10 +35,12 @@ function init() {
     canvas.addEventListener("mouseout", function (e) {
         findxy('out', e)
     }, false);
-    
-    //draw the list of lines sent by python server
-    //startingLines = {}
-    {#startingLines.append({{linesFromDB[startX]}})#}
+
+    var old_lines = {{ lines|safe }}
+}
+
+function draw_old_lines() {
+
 }
 
 function draw() {
@@ -49,9 +51,9 @@ function draw() {
     ctx.lineWidth = y;
     ctx.stroke();
     ctx.closePath();
-    lines[index] = {"startX":prevX.toString(), 
+    lines[index] = {"startX":prevX.toString(),
                      "startY":prevY.toString(),
-                     "endX":currX.toString(), 
+                     "endX":currX.toString(),
                      "endY":currY.toString()
                     };
     index = index + 1;
@@ -79,9 +81,9 @@ function findxy(action, e) {
             ctx.fillRect(currX, currY, 2, 2);
             ctx.closePath();
             dot_flag = false;
-            lines[index] = {"startX":currX.toString(), 
+            lines[index] = {"startX":currX.toString(),
                              "startY":currY.toString(),
-                             "endX":(currX+2).toString(), 
+                             "endX":(currX+2).toString(),
                              "endY":(currY+2).toString()
                             };
             index = index + 1;
@@ -108,12 +110,12 @@ function findxy(action, e) {
 function submit() {
     $.ajax(
     {
-        url:'/thanks', 
-        type: 'post', 
+        url:'/thanks',
+        type: 'post',
         data:JSON.stringify(lines),
-        contentType:'application/json', 
+        contentType:'application/json',
         processData: false
-    }).done(function(responseData) 
+    }).done(function(responseData)
     {
         //console.log("Response Recieved: ajax post success)
         document.write(responseData)

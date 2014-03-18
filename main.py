@@ -18,6 +18,7 @@ import os
 import urllib
 import cgi
 import json
+import ast
 
 import jinja2
 import webapp2
@@ -31,25 +32,31 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class Turker(db.Model): 
+class Turker(db.Model):
+    # id = db.IntegerProperty(required=True)
     lines = db.StringListProperty(required=True)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True)
-    
+
 class BlockedWorkerList(db.Model):
     blockedList = db.StringListProperty(required=True)
-    
+
 class DrawingPage(webapp2.RequestHandler):
-    def get(self):
+    def get(self, id):
         #send list of all lines to JS - make call to database - SELECT * FROM Turkers WHERE id=job# for w/e job# we are on
         # GqlQuery interface constructs a query using a GQL query string
         '''
         q = db.GqlQuery("SELECT * FROM Turker")
         linesJson = q #need to grab just the list of json objects from each line of the q
         '''
-        #template_values = {'linesFromDB':linesJson}
-        template_values = {}
+        q = db.GqlQuery("SELECT lines FROM Turker ORDER BY datetime")
+        lines = [ast.literal_eval(turker.lines[0]) for turker in q]
+        for idx,line in enumerate(lines):
+            for k,v in line.iteritems():
+                lines[idx][k] = int(v)
+
+        context = {'lines':lines}
         template = JINJA_ENVIRONMENT.get_template('drawing.html')
-        self.response.write(template.render(template_values))
+        self.response.write(template.render(context))
 
 class ThanksPage(webapp2.RequestHandler):
     def post(self):
@@ -57,7 +64,7 @@ class ThanksPage(webapp2.RequestHandler):
         dataSent = json.loads(self.request.body)
         for line in dataSent:
             self.turker.lines.append(json.dumps(dataSent[line]))
-        
+
         # check here for if the turker id is on the blocked list
             #if not, procede and add to block list, if not return - display err message
         #blocking worker wont help since each hit only has 1 person doing it (blocks only apply to a single hit)
@@ -75,16 +82,16 @@ class ThanksPage(webapp2.RequestHandler):
         self.turker.put()
         #self.response.write("Data Recieved in python: wrote to database")
         self.redirect('/thanks')
-        
+
         #kick off next job
-        
+
     def get(self):
         template_values = {}
         template = JINJA_ENVIRONMENT.get_template('thanks.html')
         self.response.write(template.render(template_values))
 
 app = webapp2.WSGIApplication([
-    ('/', DrawingPage),
+    ('/(\d+)', DrawingPage),
     ('/thanks', ThanksPage)
 ], debug=True)
 
