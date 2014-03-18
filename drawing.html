@@ -23,15 +23,11 @@ function init() {
     ctx = canvas.getContext("2d");
     w = canvas.width;
     h = canvas.height;
-    
+
     //make the cursor not become a text cursor
     canvas.onselectstart = function () { return false; } // ie
     canvas.onmousedown = function () { return false; } // mozilla
-    
-    //draw the list of lines sent by python server
-    //startingLines = {}
-    {#startingLines.append({{linesFromDB[startX]}})#}
-    
+
     $('#idBox').bind('input', function(e){
         canvas.addEventListener("mousemove", function (e) {
         findxy('move', e)
@@ -46,6 +42,9 @@ function init() {
             findxy('out', e)
         }, false);
     });
+
+    old_lines = JSON.parse('{{ lines|safe }}')
+    draw_old_lines();
 }
 
 function draw_old_lines() {
