@@ -1,8 +1,5 @@
 from boto.mturk.connection import MTurkConnection
 
-ACCESS_ID = 'AKIAI6GGZ3DCM27KDP7Q'
-SECRET_KEY = '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'
-HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
