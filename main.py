@@ -23,7 +23,7 @@ class DrawingCounter(db.Model):
     count = db.IntegerProperty(default=0)
 
 class Turker(db.Model):
-    counter = db.ReferenceProperty(DrawingCounter)
+    # counter = db.ReferenceProperty(DrawingCounter)
     lines = db.StringListProperty(required=True)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True)
 
@@ -37,7 +37,7 @@ class Dashboard(webapp2.RequestHandler):
         pass
 
 class DrawingPage(webapp2.RequestHandler):
-    def get(self, id):
+    def get(self, drawing_id):
         '''
         q = db.GqlQuery("SELECT * FROM Turker")
         linesJson = q #need to grab just the list of json objects from each line of the q
