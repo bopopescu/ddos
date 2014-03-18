@@ -63,6 +63,10 @@ class ThanksPage(webapp2.RequestHandler):
         #blocking worker wont help since each hit only has 1 person doing it (blocks only apply to a single hit)
         #instead, just keep a list of the worker id's that are ppl who have worked on any of our HITs.  reject any that are already on the list
         '''
+        query = db.GQL()
+        blockedIDs = []
+        for blockedID in query.BlockedWorkerList:
+            blockedIDs.append(blockedID)
         if workerID in blockedIDs:
             #do not write the lines to the server (ie. dont put the turker object)
             #redirect to another page saying they didnt follow directions and wont be paid

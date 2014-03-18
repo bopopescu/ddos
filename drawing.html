@@ -23,6 +23,7 @@ function init() {
     w = canvas.width;
     h = canvas.height;
     
+    //make the cursor not become a text cursor
     canvas.onselectstart = function () { return false; } // ie
     canvas.onmousedown = function () { return false; } // mozilla
     
