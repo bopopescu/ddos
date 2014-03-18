@@ -13,6 +13,7 @@ var canvas, ctx, mouseIsDown = false,
     preventResubmission = false;
 
 var lines = {};
+var old_lines = {};
 var index = 0;
 
 var x = "black", y = 2;
@@ -36,11 +37,21 @@ function init() {
         findxy('out', e)
     }, false);
 
-    var old_lines = {{ lines|safe }}
+    old_lines = JSON.parse('{{ lines|safe }}');
+    draw_old_lines();
 }
 
 function draw_old_lines() {
-
+    for (line in old_lines) {
+        var old_line = old_lines[line]
+        ctx.beginPath();
+        ctx.moveTo(parseInt(old_line.startX), parseInt(old_line.startY));
+        ctx.lineTo(parseInt(old_line.endX), parseInt(old_line.endY));
+        ctx.strokeStyle = x;
+        ctx.lineWidth = y;
+        ctx.stroke();
+        ctx.closePath();
+    }
 }
 
 function draw() {

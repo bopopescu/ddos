@@ -48,11 +48,12 @@ class DrawingPage(webapp2.RequestHandler):
         q = db.GqlQuery("SELECT * FROM Turker")
         linesJson = q #need to grab just the list of json objects from each line of the q
         '''
+        lines = []
         q = db.GqlQuery("SELECT lines FROM Turker ORDER BY datetime")
-        lines = [ast.literal_eval(turker.lines[0]) for turker in q]
-        for idx,line in enumerate(lines):
-            for k,v in line.iteritems():
-                lines[idx][k] = int(v)
+        lines = json.dumps([ast.literal_eval(turker.lines[0]) for turker in q])
+        # for idx,line in enumerate(lines):
+        #     for k,v in line.iteritems():
+        #         lines[idx][k] = int(v)
 
         context = {'lines':lines}
         template = JINJA_ENVIRONMENT.get_template('drawing.html')
