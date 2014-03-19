@@ -21,6 +21,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class Drawing(db.Model):
     count = db.IntegerProperty(default=0)
+    strokeLimit = db.IntegerProperty(default=20)
     blockedList = db.StringListProperty(required=True)
 
 class Stroke(db.Model):
@@ -33,17 +34,24 @@ class Stroke(db.Model):
 class Dashboard(webapp2.RequestHandler):
     def get(self):
         '''
-        send form for creating new drawing. the form should have a pre-filled
-        field for the drawing id.
+        send form for creating new drawing, progess on all other drawings and
+        ended jobs for viewing. the form should have a pre-filled field for the drawing id.
         '''
-        pass
+        template_values = {}
+        template = JINJA_ENVIRONMENT.get_template('dashboard.html')
+        self.response.write(template.render(template_values))
 
+class NewDrawing(webapp2.RequestHandler):
     def post(self):
         '''
-        accept the drawing creation form. create a new job and initialize the
-        drawing counter
+        create new drawing and kick off new HIT chain
         '''
-        pass
+        print "++++++" + self.request.POST['strokeLimit']
+        drawing = Drawing()
+        drawing.strokeLimit = int(self.request.POST('strokeLimit'))
+        drawing.put()
+        key = drawing.key()
+        self.redirect('/'+str(key))
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
@@ -53,7 +61,9 @@ class DrawingPage(webapp2.RequestHandler):
         assigned to
         '''
         lines = []
-        q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
+        drawing = db.get(drawing_id)
+        q = drawing.Stroke_set
+        # q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
         lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
@@ -61,27 +71,15 @@ class DrawingPage(webapp2.RequestHandler):
         self.response.write(template.render(context))
 
     def post(self, drawing_id):
-        self.stroke = Stroke()
+        '''
+        post the new stroke that the turker put on the canvas
+        '''
+        stroke = Stroke()
         dataSent = json.loads(self.request.body)
         for line in dataSent:
-            self.stroke.lines.append(json.dumps(dataSent[line]))
-
-        # check here for if the stroke id is on the blocked list
-            #if not, procede and add to block list, if not return - display err message
-        #blocking worker wont help since each hit only has 1 person doing it (blocks only apply to a single hit)
-        #instead, just keep a list of the worker id's that are ppl who have worked on any of our HITs.  reject any that are already on the list
-        '''
-        if workerID in blockedIDs:
-            #do not write the lines to the server (ie. dont put the stroke object)
-            #redirect to another page saying they didnt follow directions and wont be paid
-            self.redirect('/brokeRules')
-        else:
-            self.blockedWorkerList = BlockedWorkerList()
-            self.blockedWorkerList.blockedList.append(workerID)
-            self.blockedWorkerList.put()
-        '''
-        self.stroke.put()
-        self.redirect('/thanks')
+            stroke.lines.append(json.dumps(dataSent[line]))
+        stroke.put()
+        self.redirect('/thanks', permanent=True)
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
@@ -93,6 +91,7 @@ class ThanksPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/dashboard', Dashboard),
-    ('/(\d+)', DrawingPage),
-    ('/thanks', ThanksPage)
+    ('/new', NewDrawing),
+    ('/thanks', ThanksPage),
+    ('/([^/]+)?', DrawingPage)
 ], debug=True)
