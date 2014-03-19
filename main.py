@@ -20,7 +20,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 #----------------------------- Models ----------------------------------------#
 
 class Drawing(db.Model):
-    count = db.IntegerProperty(default=0)
+    count = db.IntegerProperty(default=1)
     blockedList = db.StringListProperty(required=True)
 
 class Stroke(db.Model):
@@ -61,33 +61,41 @@ class DrawingPage(webapp2.RequestHandler):
         self.response.write(template.render(context))
 
     def post(self, drawing_id):
-        self.stroke = Stroke()
+        stroke = Stroke()
         dataSent = json.loads(self.request.body)
 
-        q = db.GqlQuery("SELECT blockedList FROM Drawing")
+        q = db.GqlQuery("SELECT * FROM Drawing")
         
-        #check if there is no drawing object yet (this is the first person being blocked for this drawing
-        if not q:
-            self.drawing = Drawing()
-            self.drawing.blockedList.append(dataSent['turkerID'])
-            self.drawing.put()
+        count = 0
+        for drawing in q:
+            count = 1
+            break
+            
+        if count == 0:
+            #if there is no drawing object yet (this is the first person being blocked for this drawing)
+            drawing = Drawing()
+            drawing.blockedList.append(dataSent['turkerID'])
+            drawing.put()
             self.redirect('/thanks')
-        else:
-            for drawing in q:
-                if dataSent['turkerID'] in drawing.blockedList:
-                    #reject the turker - do not approve 
-                    #redirect page to some kind of err for them
-                    self.redirect('/thanks')
-                else:
-                    #approve job
-                    #add to blocked list
-                    drawing.blockedList.append(dataSent['turkerID'])
-                    drawing.put()
-                    #save lines
-                    for line in dataSent['lines']:
-                        self.stroke.lines.append(json.dumps(dataSent['lines'][line]))
-                    self.stroke.put()
-                    self.redirect('/thanks')
+
+        for drawing in q:
+            if dataSent['turkerID'] in drawing.blockedList:
+                #reject the turker - do not approve 
+                #redirect page to some kind of err for them
+                self.redirect('/thanks')
+            else:
+                #approve job
+                #add to blocked list
+                drawing.blockedList.append(dataSent['turkerID'])
+                drawing.count += 1
+                drawing.put()
+                #save lines
+                for line in dataSent['lines']:
+                    stroke.lines.append(json.dumps(dataSent['lines'][line]))
+                stroke.put()
+                self.redirect('/thanks')
+                
+        #if drawing.count < some magic number, then deploy another job
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
