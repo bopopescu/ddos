@@ -2,6 +2,8 @@
 <head>
     <title>DDoS Project</title>
     <script src="/static/jquery-2.1.0.min.js"></script>
+</head>
+
     <script type="text/javascript">
         var canvas, ctx, mouseIsDown = false,
             prevX = 0,
@@ -88,6 +90,12 @@ function submit() {
     });
 }
 
+function findxy(action, e) {
+    if (action == 'down') {
+        prevX = currX;
+        prevY = currY;
+        currX = e.clientX - canvas.offsetLeft;
+        currY = e.clientY - canvas.offsetTop;
                 //this flag becomes false when click up or cursor leaves canvas, stops stroke
                 mouseIsDown = true;
                 //point is to draw at least one point even if the mouse is never moved (draws a dot)
@@ -123,6 +131,44 @@ function submit() {
                 }
             }
         }
+
+                //this flag becomes false when click up or cursor leaves canvas, stops stroke
+                mouseIsDown = true;
+                //point is to draw at least one point even if the mouse is never moved (draws a dot)
+                dot_flag = true;
+                if (dot_flag) {
+                    ctx.beginPath();
+                    ctx.fillStyle = x;
+                    ctx.fillRect(currX, currY, 2, 2);
+                    ctx.closePath();
+                    dot_flag = false;
+                    lines[index] = {"startX":currX.toString(),
+                                     "startY":currY.toString(),
+                                     "endX":(currX+2).toString(),
+                                     "endY":(currY+2).toString()
+                                    };
+                    index = index + 1;
+                }
+            }
+            if ((action == "up" || action == "out") && !preventResubmission) {
+                if(mouseIsDown){
+                    mouseIsDown = false;
+                    preventResubmission = true;
+                    submit();
+                }
+            }
+            if (action == 'move') {
+                if (mouseIsDown) {
+                    prevX = currX;
+                    prevY = currY;
+                    currX = e.clientX - canvas.offsetLeft;
+                    currY = e.clientY - canvas.offsetTop;
+                    draw();
+                }
+            }
+        }
+
+    </script>
 
 
 <body onload="init()">

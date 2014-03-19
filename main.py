@@ -51,7 +51,13 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         print "++++++" + self.request.POST['strokeLimit']
         drawing = Drawing()
-        drawing.strokeLimit = int(self.request.POST('strokeLimit'))
+        drawing.strokeLimit = int(self.request.POST['strokeLimit'])
+        drawing.put()
+        key = drawing.key()
+        self.redirect('/'+str(key))
+    
+    def get(self):
+        drawing = Drawing()
         drawing.put()
         key = drawing.key()
         self.redirect('/'+str(key))
@@ -64,9 +70,10 @@ class DrawingPage(webapp2.RequestHandler):
         assigned to
         '''
         lines = []
-        drawing = db.get(drawing_id)
-        q = drawing.Stroke_set
-        # q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
+        #drawing = db.get(drawing_id)
+        #logging.debug(drawing_id)
+        #q = drawing.Stroke_set
+        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter = KEY('Stroke', :1) ORDER BY datetime", drawing_id)
         lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
