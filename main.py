@@ -7,8 +7,9 @@ import ast
 import jinja2
 import webapp2
 
+import logging
+
 from google.appengine.ext import db
-#from boto.mturk.connection import MTurkConnection
 
 #----------------------------- Config ----------------------------------------#
 
@@ -16,11 +17,13 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+    
+logging.getLogger().setLevel(logging.DEBUG)
 
 #----------------------------- Models ----------------------------------------#
 
 class Drawing(db.Model):
-    count = db.IntegerProperty(default=1)
+    count = db.IntegerProperty(default=0)
     blockedList = db.StringListProperty(required=True)
 
 class Stroke(db.Model):
@@ -63,39 +66,40 @@ class DrawingPage(webapp2.RequestHandler):
     def post(self, drawing_id):
         stroke = Stroke()
         dataSent = json.loads(self.request.body)
+        redirectString = "/thanks"
 
-        q = db.GqlQuery("SELECT * FROM Drawing")
+        query = db.GqlQuery("SELECT * FROM Drawing WHERE __key__ = KEY('Drawing', :1)", drawing_id)
         
-        count = 0
-        for drawing in q:
-            count = 1
-            break
-            
-        if count == 0:
-            #if there is no drawing object yet (this is the first person being blocked for this drawing)
-            drawing = Drawing()
-            drawing.blockedList.append(dataSent['turkerID'])
-            drawing.put()
-            self.redirect('/thanks')
-
-        for drawing in q:
+        #there will always be only 1 drawing in query but this is the best way to access it
+        for drawing in query:
+            # need to check here if the turker has already done one for this drawing
             if dataSent['turkerID'] in drawing.blockedList:
                 #reject the turker - do not approve 
-                #redirect page to some kind of err for them
-                self.redirect('/thanks')
+                
+                #maybe redirect page to some kind of err for them?
+                #redirectString = "/errPage"
+                pass
             else:
                 #approve job
+                
                 #add to blocked list
                 drawing.blockedList.append(dataSent['turkerID'])
+                #one step closer to finishing this drawing
                 drawing.count += 1
                 drawing.put()
                 #save lines
                 for line in dataSent['lines']:
                     stroke.lines.append(json.dumps(dataSent['lines'][line]))
                 stroke.put()
-                self.redirect('/thanks')
                 
-        #if drawing.count < some magic number, then deploy another job
+                #if drawing.count < this drawing's limit, then deploy another job
+                if drawing.count < drawing.limit:
+                    #boto code here to deploy next hit
+                    pass
+            
+        #go to thanks page
+        self.redirect(redirectString, permanent=True)
+
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
@@ -107,6 +111,7 @@ class ThanksPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/dashboard', Dashboard),
-    ('/(\d+)', DrawingPage),
-    ('/thanks', ThanksPage)
+    ('/thanks', ThanksPage),
+    ('/([^/]+)?', DrawingPage)
+    
 ], debug=True)
