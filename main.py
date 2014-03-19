@@ -24,6 +24,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 class Drawing(db.Model):
     count = db.IntegerProperty(default=0)
+    strokeLimit = db.IntegerProperty(default=20)
     blockedList = db.StringListProperty(required=True)
 
 class Stroke(db.Model):
@@ -36,17 +37,24 @@ class Stroke(db.Model):
 class Dashboard(webapp2.RequestHandler):
     def get(self):
         '''
-        send form for creating new drawing. the form should have a pre-filled
-        field for the drawing id.
+        send form for creating new drawing, progess on all other drawings and
+        ended jobs for viewing. the form should have a pre-filled field for the drawing id.
         '''
-        pass
+        template_values = {}
+        template = JINJA_ENVIRONMENT.get_template('dashboard.html')
+        self.response.write(template.render(template_values))
 
+class NewDrawing(webapp2.RequestHandler):
     def post(self):
         '''
-        accept the drawing creation form. create a new job and initialize the
-        drawing counter
+        create new drawing and kick off new HIT chain
         '''
-        pass
+        print "++++++" + self.request.POST['strokeLimit']
+        drawing = Drawing()
+        drawing.strokeLimit = int(self.request.POST('strokeLimit'))
+        drawing.put()
+        key = drawing.key()
+        self.redirect('/'+str(key))
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
@@ -56,7 +64,9 @@ class DrawingPage(webapp2.RequestHandler):
         assigned to
         '''
         lines = []
-        q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
+        drawing = db.get(drawing_id)
+        q = drawing.Stroke_set
+        # q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
         lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
@@ -111,7 +121,7 @@ class ThanksPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/dashboard', Dashboard),
+    ('/new', NewDrawing),
     ('/thanks', ThanksPage),
     ('/([^/]+)?', DrawingPage)
-    
 ], debug=True)
