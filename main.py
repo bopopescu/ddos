@@ -65,21 +65,29 @@ class DrawingPage(webapp2.RequestHandler):
         dataSent = json.loads(self.request.body)
 
         q = db.GqlQuery("SELECT blockedList FROM Drawing")
-        for drawing in q:
-            if dataSent['turkerID'] in drawing.blockedList:
-                #reject the turker - do not approve 
-                #redirect page to some kind of err for them
-                self.redirect('/thanks')
-            else:
-                #approve job
-                #add to blocked list
-                drawing.blockedList.append(dataSent['turkerID'])
-                drawing.put()
-                #save lines
-                for line in dataSent['lines']:
-                    self.turker.lines.append(json.dumps(dataSent['lines'][line]))
-                self.turker.put()
-                self.redirect('/thanks')
+        
+        #check if there is no drawing object yet (this is the first person being blocked for this drawing
+        if not q:
+            self.drawing = Drawing()
+            self.drawing.blockedList.append(dataSent['turkerID'])
+            self.drawing.put()
+            self.redirect('/thanks')
+        else:
+            for drawing in q:
+                if dataSent['turkerID'] in drawing.blockedList:
+                    #reject the turker - do not approve 
+                    #redirect page to some kind of err for them
+                    self.redirect('/thanks')
+                else:
+                    #approve job
+                    #add to blocked list
+                    drawing.blockedList.append(dataSent['turkerID'])
+                    drawing.put()
+                    #save lines
+                    for line in dataSent['lines']:
+                        self.stroke.lines.append(json.dumps(dataSent['lines'][line]))
+                    self.stroke.put()
+                    self.redirect('/thanks')
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
