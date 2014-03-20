@@ -1,18 +1,15 @@
 import uuid
 import datetime
-
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
 ACCESS_ID = ''
 SECRET_KEY = ''
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
-#change host to mechanicalturk.amazonaws.com in order to launch to real mturk
-#change host to mechanicalturk.sandbox.amazonaws.com in order to launch to dev
 
-mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
+mechTurkConn = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
-def launchHIT():
+def launchHIT(mtc):
 
   title = 'Draw a single line on a canvas'
   description = ('Draw on a canvas')
@@ -75,17 +72,35 @@ def launchHIT():
   #hits = mtc.get_reviewable_hits()
   #assignment = mtc.get_assignments(hits.HITId)
 
-def rejectTurker(mtcConnection):
-    hits = mtcConnection.get_reviewable_hits(page_size=100)
+def getInfo(mtc):
+    hits = mtc.get_reviewable_hits(page_size=100)
     for hit in hits:
-        print hit.HITId
-        assignments = mtcConnection.get_assignments(hit.HITId)
-        for assignment in assignments:
-            print assignment.WorkerId
+        assignments = mtc.get_assignments(hit.HITId)
+        #for assignment in assignments:
+            #print assignment.WorkerId
+            #print assignment.HITId
+        #for assignment in assignments:
+            #mtc.reject_assignment(assignment.HITId)
+        return assignments
 
-def approveTurker(mtcConnection):
-    print 'write this later'
+def rejectTurker(mtc):
+    hits = mtc.get_reviewable_hits(page_size=100)
+    turkersInfo = getInfo(mtc)
+    for turkerInfo in turkersInfo:
+        mtc.reject_assignment(turkerInfo.AssignmentId)
+    for hit in hits:
+        mtc.dispose_hit(hit.HITId)
+
+def approveTurker(mtc):
+    hits = mtc.get_reviewable_hits(page_size=100)
+    turkersInfo = getInfo(mtc)
+    for turkerInfo in turkersInfo:
+        mtc.approve_assignment(turkerInfo.AssignmentId)
+    for hit in hits:
+            mtc.dispose_hit(hit.HITId)
 
 if __name__ == "__main__":
-  launchHIT()
-  rejectTurker(mtc)
+    #launchHIT(mechTurkConn)
+    #getInfo(mechTurkConn)
+    #rejectTurker(mechTurkConn)
+    #approveTurker(mechTurkConn)

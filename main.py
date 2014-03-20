@@ -17,10 +17,7 @@ from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,A
 import uuid
 import datetime
 
-
 from google.appengine.ext import db
-
-
 #----------------------------- MTurk Connection ----------------------------------------#
 
 ACCESS_ID = ''
@@ -111,12 +108,13 @@ class DrawingPage(webapp2.RequestHandler):
             # need to check here if the turker has already done one for this drawing
             if dataSent['turkerID'] in drawing.blockedList:
                 #reject the turker - do not approve
-
+                rejectTurker(mtc)
                 #maybe redirect page to some kind of err for them?
                 #redirectString = "/errPage"
                 pass
             else:
                 #approve job
+                approveTurker(mtc)
 
                 #add to blocked list
                 drawing.blockedList.append(dataSent['turkerID'])
@@ -131,7 +129,7 @@ class DrawingPage(webapp2.RequestHandler):
                 #if drawing.count < this drawing's limit, then deploy another job
                 if drawing.count < drawing.limit:
 
-                    launchHIT()
+                    launchHIT(mtc)
 
                     pass
 
