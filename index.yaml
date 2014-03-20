@@ -12,6 +12,12 @@ indexes:
 
 - kind: Stroke
   properties:
+  - name: counter
+  - name: datetime
+  - name: lines
+
+- kind: Stroke
+  properties:
   - name: datetime
   - name: lines
 

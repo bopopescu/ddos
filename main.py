@@ -20,6 +20,8 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 #----------------------------- Models ----------------------------------------#
 
 class Drawing(db.Model):
+    finished = db.BooleanProperty(default=False)
+    # blob = db.BlobProperty() # used to store file picture
     count = db.IntegerProperty(default=0)
     strokeLimit = db.IntegerProperty(default=20)
     blockedList = db.StringListProperty(required=True)
@@ -37,18 +39,41 @@ class Dashboard(webapp2.RequestHandler):
         send form for creating new drawing, progess on all other drawings and
         ended jobs for viewing. the form should have a pre-filled field for the drawing id.
         '''
-        template_values = {}
+        q = db.GqlQuery("SELECT * FROM Drawing")
+        finished = []
+        in_progress = []
+        for drawing in q:
+            if drawing.finished == True:
+                # generate/save picture
+                finished.append(drawing)
+            else:
+                in_progress.append(drawing)
+
+        context = {"finished":finished,"in_progress":in_progress}
         template = JINJA_ENVIRONMENT.get_template('dashboard.html')
-        self.response.write(template.render(template_values))
+        self.response.write(template.render(context))
+
+class ViewDrawing(webapp2.RequestHandler):
+    def get(self, drawing_id):
+        '''
+        simple read only view of a drawing (can be ongoing or finished)
+        '''
+        lines = []
+        drawing = db.get(drawing_id)
+        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
+        lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
+        context = {"drawing_id":drawing_id,"lines":lines}
+        template = JINJA_ENVIRONMENT.get_template('view.html')
+        self.response.write(template.render(context))
 
 class NewDrawing(webapp2.RequestHandler):
     def post(self):
         '''
         create new drawing and kick off new HIT chain
         '''
-        print "++++++" + self.request.POST['strokeLimit']
+        strokeLimit = int(self.request.POST[u'strokeLimit'])
         drawing = Drawing()
-        drawing.strokeLimit = int(self.request.POST('strokeLimit'))
+        drawing.strokeLimit = strokeLimit
         drawing.put()
         key = drawing.key()
         self.redirect('/'+str(key))
@@ -62,8 +87,7 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         lines = []
         drawing = db.get(drawing_id)
-        q = drawing.Stroke_set
-        # q = db.GqlQuery("SELECT lines FROM Stroke ORDER BY datetime")
+        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
         lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
@@ -74,7 +98,18 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         post the new stroke that the turker put on the canvas
         '''
+        drawing = db.get(drawing_id)
+        drawing.count += 1
+        if drawing.count == drawing.strokeLimit:
+            drawing.finished = True
+            # STOP PUTTING HITS TO MTURK
+            # generate blob
+        else:
+            # PUT JOB TO MTURK
+            pass
+        drawing.put()
         stroke = Stroke()
+        stroke.counter = drawing
         dataSent = json.loads(self.request.body)
         for line in dataSent:
             stroke.lines.append(json.dumps(dataSent[line]))
@@ -93,5 +128,6 @@ app = webapp2.WSGIApplication([
     ('/dashboard', Dashboard),
     ('/new', NewDrawing),
     ('/thanks', ThanksPage),
-    ('/([^/]+)?', DrawingPage)
+    ('/view/([^/]+)', ViewDrawing),
+    ('/([^/]+)', DrawingPage)
 ], debug=True)

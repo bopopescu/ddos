@@ -1,15 +1,33 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>DDoS Dashboard</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}DDoS Dashboard{% endblock title %}
+{% block content %}
     <h1>DDoS Dashboard</h1>
-    <hr>
+    <hr/>
+    <h3>Launch New Drawing</h3>
     <form action="/new" method="post">
         Stroke Limit <input name="strokeLimit" type="number">
         <input type="submit" value="New Drawing">
     </form>
-</body>
-</html>
+    <br/>
+    <hr/>
+    <h3>Drawings In-Progress</h3>
+    <table>
+        <tr>
+            <th>Drawing ID</th>
+            <th>Strokes</th>
+            <th>Stroke Limit</th>
+            <th>Link</th>
+        </tr>
+    {% for drawing in in_progress %}
+        <tr>
+            <td>{{ drawing.key() }}</td>
+            <td>{{ drawing.count }}</td>
+            <td>{{ drawing.strokeLimit }}</td>
+            <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3"><em>There are drawings in-progress</em></td></tr>
+    {% endfor %}
+    </table>
+{# links to done drawings | saved pngs | link to gallery #}
+{% endblock content %}
