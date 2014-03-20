@@ -89,6 +89,7 @@ class NewDrawing(webapp2.RequestHandler):
         drawing = Drawing()
         drawing.strokeLimit = strokeLimit
         drawing.put()
+        launchHIT(mtc)
         key = drawing.key()
         self.redirect('/'+str(key))
 
