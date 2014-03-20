@@ -4,13 +4,15 @@ import datetime
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
+ACCESS_ID = ''
+SECRET_KEY = ''
+HOST = 'mechanicalturk.sandbox.amazonaws.com'
+#change host to mechanicalturk.amazonaws.com in order to launch to real mturk
+#change host to mechanicalturk.sandbox.amazonaws.com in order to launch to dev
+
+mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
+
 def launchHIT():
-
-  ACCESS_ID = ''
-  SECRET_KEY = ''
-  HOST = 'mechanicalturk.sandbox.amazonaws.com'
-
-  mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
   title = 'Draw a single line on a canvas'
   description = ('Draw on a canvas')
@@ -73,5 +75,14 @@ def launchHIT():
   #hits = mtc.get_reviewable_hits()
   #assignment = mtc.get_assignments(hits.HITId)
 
+def rejectTurker(mtcConnection):
+    hits = mtcConnection.get_reviewable_hits(page_size=100)
+    for hit in hits:
+        print hit.HITId
+        assignments = mtcConnection.get_assignments(hit.HITId)
+        for assignment in assignments:
+            print assignment.WorkerId
+
 if __name__ == "__main__":
   launchHIT()
+  rejectTurker(mtc)

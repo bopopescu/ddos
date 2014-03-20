@@ -9,7 +9,26 @@ import webapp2
 
 import logging
 
+#importing stuff from script
+from launchHIT import launchHIT, rejectTurker
+from boto.mturk.connection import MTurkConnection
+from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
+
+import uuid
+import datetime
+
+
 from google.appengine.ext import db
+
+
+#----------------------------- MTurk Connection ----------------------------------------#
+
+ACCESS_ID = ''
+SECRET_KEY = ''
+HOST = 'mechanicalturk.sandbox.amazonaws.com'
+
+mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
+
 
 #----------------------------- Config ----------------------------------------#
 
@@ -17,7 +36,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
-    
+
 logging.getLogger().setLevel(logging.DEBUG)
 
 #----------------------------- Models ----------------------------------------#
@@ -55,7 +74,7 @@ class NewDrawing(webapp2.RequestHandler):
         drawing.put()
         key = drawing.key()
         self.redirect('/'+str(key))
-    
+
     def get(self):
         drawing = Drawing()
         drawing.put()
@@ -86,19 +105,19 @@ class DrawingPage(webapp2.RequestHandler):
         redirectString = "/thanks"
 
         query = db.GqlQuery("SELECT * FROM Drawing WHERE __key__ = KEY('Drawing', :1)", drawing_id)
-        
+
         #there will always be only 1 drawing in query but this is the best way to access it
         for drawing in query:
             # need to check here if the turker has already done one for this drawing
             if dataSent['turkerID'] in drawing.blockedList:
-                #reject the turker - do not approve 
-                
+                #reject the turker - do not approve
+
                 #maybe redirect page to some kind of err for them?
                 #redirectString = "/errPage"
                 pass
             else:
                 #approve job
-                
+
                 #add to blocked list
                 drawing.blockedList.append(dataSent['turkerID'])
                 #one step closer to finishing this drawing
@@ -108,12 +127,14 @@ class DrawingPage(webapp2.RequestHandler):
                 for line in dataSent['lines']:
                     stroke.lines.append(json.dumps(dataSent['lines'][line]))
                 stroke.put()
-                
+
                 #if drawing.count < this drawing's limit, then deploy another job
                 if drawing.count < drawing.limit:
-                    #boto code here to deploy next hit
+
+                    launchHIT()
+
                     pass
-            
+
         #go to thanks page
         self.redirect(redirectString, permanent=True)
 
