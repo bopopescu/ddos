@@ -3,22 +3,17 @@ import urllib
 import cgi
 import json
 import ast
-
-import jinja2
-import webapp2
-
-import logging
-
-#importing stuff from script
-from launchHIT import launchHIT, rejectTurker, approveTurker
-from boto.mturk.connection import MTurkConnection
-from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
-
 import uuid
 import datetime
 
+import jinja2
+import webapp2
+import logging
+
+from boto.mturk.connection import MTurkConnection
+from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
-#----------------------------- MTurk Connection ----------------------------------------#
+#----------------------------- MTurk Connection ------------------------------#
 
 ACCESS_ID = ''
 SECRET_KEY = ''

@@ -3,11 +3,11 @@ import datetime
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
-ACCESS_ID = ''
-SECRET_KEY = ''
-HOST = 'mechanicalturk.sandbox.amazonaws.com'
+# ACCESS_ID = ''
+# SECRET_KEY = ''
+# HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
-mechTurkConn = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
+# mechTurkConn = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
 def launchHIT(mtc):
 
@@ -99,7 +99,7 @@ def approveTurker(mtc):
     for hit in hits:
             mtc.dispose_hit(hit.HITId)
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     #launchHIT(mechTurkConn)
     #getInfo(mechTurkConn)
     #rejectTurker(mechTurkConn)
