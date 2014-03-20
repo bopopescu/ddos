@@ -10,7 +10,7 @@ import webapp2
 import logging
 
 #importing stuff from script
-from launchHIT import launchHIT, rejectTurker
+from launchHIT import launchHIT, rejectTurker, approveTurker
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 

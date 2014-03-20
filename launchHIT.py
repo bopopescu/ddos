@@ -83,6 +83,9 @@ def rejectTurker(mtcConnection):
         for assignment in assignments:
             print assignment.WorkerId
 
+def approveTurker(mtcConnection):
+    print 'write this later'
+
 if __name__ == "__main__":
   launchHIT()
   rejectTurker(mtc)
