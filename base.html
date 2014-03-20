@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock title %}</title>
+    <style>
+        body {
+            font-family: Arial,Helvetica,sans-serif;
+        }
+        table, th, td {
+            border-collapse:collapse;
+            border:1px solid black;
+        }
+        th, td {
+            padding:5px;
+        }
+    </style>
+</head>
+<body>
+    {% block content %}
+    {% endblock content %}
+</body>
+</html>
