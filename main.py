@@ -19,8 +19,11 @@ ACCESS_ID = ''
 SECRET_KEY = ''
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
-mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
+if not boto.config.has_section('Boto'):
+    boto.config.add_section('Boto')
+boto.config.set('Boto', 'https_validate_certificates', 'False')
 
+mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
 #----------------------------- Config ----------------------------------------#
 
