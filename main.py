@@ -93,9 +93,9 @@ class NewDrawing(webapp2.RequestHandler):
         drawing = Drawing()
         drawing.strokeLimit = strokeLimit
         drawing.put()
-        launchHIT(mtc)
         key = drawing.key()
-        self.redirect('/'+str(key))
+        launchHIT(mtc, str(key))
+        #self.redirect('/'+str(key))
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
@@ -117,6 +117,7 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         post the new stroke that the turker put on the canvas
         '''
+        '''
         drawing = db.get(drawing_id)
         drawing.count += 1
         if drawing.count == drawing.strokeLimit:
@@ -127,13 +128,16 @@ class DrawingPage(webapp2.RequestHandler):
             # PUT JOB TO MTURK
             pass
         drawing.put()
+        
         stroke = Stroke()
         stroke.counter = drawing
         dataSent = json.loads(self.request.body)
         for line in dataSent:
             stroke.lines.append(json.dumps(dataSent[line]))
         stroke.put()
-        self.redirect('/thanks', permanent=True)
+        #self.redirect('/thanks', permanent=True)
+        '''
+        redirectString = '/thanks'
 
         query = db.GqlQuery("SELECT * FROM Drawing WHERE __key__ = KEY('Drawing', :1)", drawing_id)
 
@@ -143,16 +147,18 @@ class DrawingPage(webapp2.RequestHandler):
             if dataSent['turkerID'] in drawing.blockedList:
                 #reject the turker - do not approve
                 rejectTurker(mtc)
+                print '++++++++++++++++++++++++++++++++++++++rejected'
                 #maybe redirect page to some kind of err for them?
                 #redirectString = "/errPage"
                 pass
             else:
                 #approve job
                 approveTurker(mtc)
-
+                print '++++++++++++++++++++++++++++++++++++++approve'
                 #add to blocked list
                 drawing.blockedList.append(dataSent['turkerID'])
                 #one step closer to finishing this drawing
+                #here down might move - to a poll or something
                 drawing.count += 1
                 drawing.put()
                 #save lines
@@ -163,8 +169,8 @@ class DrawingPage(webapp2.RequestHandler):
                 #if drawing.count < this drawing's limit, then deploy another job
                 if drawing.count < drawing.limit:
 
-                    launchHIT(mtc)
-
+                    launchHIT(mtc, str(drawing.key))
+                    print '++++++++++++++++++++++++++++++++++++++launched another'
                     pass
 
         #go to thanks page
