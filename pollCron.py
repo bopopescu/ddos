@@ -14,10 +14,12 @@ import boto
 from boto.mturk.connection import MTurkConnection
 from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
+
+import main
 #----------------------------- MTurk Connection ------------------------------#
 
-ACCESS_ID = ''
-SECRET_KEY = ''
+ACCESS_ID = 'AKIAJGYLVFH5HSDGHVZQ'
+SECRET_KEY = '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'
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
@@ -64,12 +66,18 @@ class Poll(webapp2.RequestHandler):
                 for drawing in query:
                     #if so, reject
                     if worker_id in drawing.blockedList:
-                        #TODO: get lsit of all strokes with this drawing, and throw out the most recent
+                        #TODO: get list of all strokes with this drawing, and throw out the most recent
+                        query = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
+                        lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
+                        print lines
+                        
                         mtc.reject_assignment(ass_id)
                         mtc.dispose_hit(hitID)
                         print 'here4'
                     #otherwise, approve the work and add that name to the list of blocked
                     else:
+                        print 'here3.0'
+                        print 'assid: ',ass_id
                         mtc.approve_assignment(ass_id)
                         print 'here3.1'
                         mtc.dispose_hit(hitID)
@@ -81,20 +89,22 @@ class Poll(webapp2.RequestHandler):
                             launchHIT(mtc, str(drawing.key))
                             print 'here6'
                             pageOfHits = mtc.search_hits()
-                            print 'here7'
                             for page in pageOfHits:
-                                print page[0]
-                                print 'here8'
-                            drawing.hitID = page[0].HITId
+                                drawing.hitID = page.HITId
+                                drawing.put()
                             print '++++++++++++++++++++++++++++++++++++++launched another'
 
                             #increment the drawing counter and save it
                             drawing.count+=1
                             drawing.put()
                             print 'here9'
-                    
-        except Exception as e:
+            
+        except Exception as ex:
             print 'API call failed!'
+            template = "an exception of type {0} occured. arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            print message
+            
         
         finally:
             print 'success'

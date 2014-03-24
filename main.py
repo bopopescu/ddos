@@ -16,8 +16,8 @@ from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
 #----------------------------- MTurk Connection ------------------------------#
 
-ACCESS_ID = ''
-SECRET_KEY = ''
+ACCESS_ID = 'AKIAJGYLVFH5HSDGHVZQ'
+SECRET_KEY = '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'
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
@@ -42,7 +42,7 @@ class Drawing(db.Model):
     # blob = db.BlobProperty() # used to store file picture
     count = db.IntegerProperty(default=0)
     strokeLimit = db.IntegerProperty(default=20)
-    blockedList = db.StringListProperty(required=True)
+    blockedList = db.StringListProperty(required=True, default=[])
     hitID = db.StringProperty(default='x')
 
 class Stroke(db.Model):
@@ -90,26 +90,26 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         create new drawing and kick off new HIT chain
         '''
-        strokeLimit = int(self.request.POST[u'strokeLimit'])
-        drawing = Drawing()
-        drawing.strokeLimit = strokeLimit
-        
-        drawing.put()
-        key = drawing.key()
-        launchHIT(mtc, str(key))
-        #self.redirect('/'+str(key))
         
         try:
-            pageOfHits = mtc.search_hits()
-            #print pageOfHits.HITId
-            for page in pageOfHits:
-                #print page.HITId
-                drawing.hitID = page.HITId
-                drawing.put()
-                break
-        except Exception as e:
-            print "ERR in new drawing: should never happen"
-            pass
+            
+            drawing = Drawing()
+            strokeLimit = int(self.request.POST[u'strokeLimit'])
+            drawing.strokeLimit = strokeLimit
+            drawing.put()
+            
+            result = launchHIT(mtc, str(drawing.key()))
+            drawing.hitID = result[0].HITId
+            drawing.put()
+            
+        except Exception as ex:
+            print 'launch hit failed'
+            template = "an exception of type {0} occured. \nArguments:{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            print message
+        
+        finally:
+            self.redirect('/dashboard')
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
@@ -131,68 +131,16 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         post the new stroke that the turker put on the canvas
         '''
-        '''
+
+        self.redirect('/thanks', permanent=True)
         drawing = db.get(drawing_id)
-        drawing.count += 1
-        if drawing.count == drawing.strokeLimit:
-            drawing.finished = True
-            # STOP PUTTING HITS TO MTURK
-            # generate blob
-        else:
-            # PUT JOB TO MTURK
-            pass
-        drawing.put()
-        
+        dataSent = json.loads(self.request.body)
         stroke = Stroke()
         stroke.counter = drawing
-        dataSent = json.loads(self.request.body)
+        #save lines
         for line in dataSent:
             stroke.lines.append(json.dumps(dataSent[line]))
         stroke.put()
-        #self.redirect('/thanks', permanent=True)
-        '''
-        redirectString = '/thanks'
-
-        query = db.GqlQuery("SELECT * FROM Drawing WHERE __key__ = KEY('Drawing', :1)", drawing_id)
-
-        dataSent = json.loads(self.request.body)
-        #there will always be only 1 drawing in query but this is the best way to access it
-        for drawing in query:
-            # need to check here if the turker has already done one for this drawing
-            if dataSent['turkerID'] in drawing.blockedList:
-                #reject the turker - do not approve
-                rejectTurker(mtc)
-                print '++++++++++++++++++++++++++++++++++++++rejected'
-                #maybe redirect page to some kind of err for them?
-                #redirectString = "/errPage"
-                pass
-            else:
-                #approve job
-                approveTurker(mtc)
-                print '++++++++++++++++++++++++++++++++++++++approve'
-                #add to blocked list
-                drawing.blockedList.append(dataSent['turkerID'])
-                #one step closer to finishing this drawing
-                #here down might move - to a poll or something
-                drawing.count += 1
-                drawing.put()
-                stroke = Stroke()
-                stroke.counter = drawing
-                #save lines
-                for line in dataSent['lines']:
-                    stroke.lines.append(json.dumps(dataSent['lines'][line]))
-                stroke.put()
-
-                #if drawing.count < this drawing's limit, then deploy another job
-                if drawing.count < drawing.limit:
-
-                    launchHIT(mtc, str(drawing.key))
-                    print '++++++++++++++++++++++++++++++++++++++launched another'
-                    pass
-
-        #go to thanks page
-        self.redirect(redirectString, permanent=True)
-
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):

@@ -30,7 +30,21 @@
             //make the cursor not become a text cursor
             canvas.onselectstart = function () { return false; } // ie
             canvas.onmousedown = function () { return false; } // mozilla
-
+            
+            canvas.addEventListener("mousemove", function (e) {
+            findxy('move', e)
+            }, false);
+            canvas.addEventListener("mousedown", function (e) {
+                findxy('down', e)
+            }, false);
+            canvas.addEventListener("mouseup", function (e) {
+                findxy('up', e)
+            }, false);
+            canvas.addEventListener("mouseout", function (e) {
+                findxy('out', e)
+            }, false);
+            
+            /*
             $('#idBox').bind('input', function(e){
                 canvas.addEventListener("mousemove", function (e) {
                 findxy('move', e)
@@ -45,7 +59,7 @@
                     findxy('out', e)
                 }, false);
             });
-
+            */
             old_lines = JSON.parse('{{ lines|safe }}')
             draw_old_lines();
         }
@@ -83,7 +97,7 @@ function submit() {
     $.ajax({
         url:'/'+drawing_id,
         type: 'post',
-        data: JSON.stringify({'lines':lines, 'turkerID':document.getElementById('idBox').value}),
+        data: JSON.stringify(lines),
         contentType:'application/json',
         processData: false
     }).done(function(responseData) {
@@ -118,6 +132,10 @@ function findxy(action, e) {
     }
     if ((action == "up" || action == "out") && !preventResubmission) {
         if(mouseIsDown){
+            canvas.removeEventListener('mousemove', findxy);
+            canvas.removeEventListener('mouseup', findxy);
+            canvas.removeEventListener('mousedown', findxy);
+            canvas.removeEventListener('mouseout', findxy);
             mouseIsDown = false;
             preventResubmission = true;
             submit();
@@ -142,6 +160,6 @@ function findxy(action, e) {
     <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
     <!--input type="button" value="clear" id="clr" size="23" onclick="erase()" style="position:absolute;top:80%;left:15%;"-->
     <!--input type="button" value="submit" id="sub" size="30" onclick="submit()" style="position:absolute;top:50%;left:50%;"-->
-    <input type="text" id="idBox" width="100" height="50" style="position:absolute;top:5%;left:15%;" ></input>
+    <!--input type="text" id="idBox" width="100" height="50" style="position:absolute;top:5%;left:15%;" ></input-->
 </body>
 </html>

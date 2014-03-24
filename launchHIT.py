@@ -56,7 +56,7 @@ def launchHIT(mtc, drawing_id):
 
   #------------------- HIT creation ---------------------
 
-  mtc.create_hit(question=questionForm,
+  return mtc.create_hit(question=questionForm,
                  max_assignments=1,
                  lifetime=datetime.timedelta(days=1),
                  title=title,
