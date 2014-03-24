@@ -12,8 +12,14 @@ handlers:
   static_files: /favicon.ico
   upload: /favicon\.ico
 
+- url: /polling
+  script: pollCron.app
+  login: admin
+  
 - url: /.*
   script: main.app
+  
+
 
 libraries:
 - name: webapp2
