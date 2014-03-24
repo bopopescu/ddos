@@ -56,7 +56,7 @@ class Poll(webapp2.RequestHandler):
                 #only runs once "guaranteed"-ish
                 for assignment in assignments:
                     worker_id = assignment.WorkerId
-                    ass_id = assignment.HITId
+                    ass_id = assignment.AssignmentId
                 print 'here2'    
                 #print 'size: ' + str(len(result))
                 #get the list of blocked ID's from the datastore
@@ -77,7 +77,6 @@ class Poll(webapp2.RequestHandler):
                     #otherwise, approve the work and add that name to the list of blocked
                     else:
                         print 'here3.0'
-                        print 'assid: ',ass_id
                         mtc.approve_assignment(ass_id)
                         print 'here3.1'
                         mtc.dispose_hit(hitID)
@@ -85,19 +84,17 @@ class Poll(webapp2.RequestHandler):
                         drawing.blockedList.append(str(worker_id))  
                         print 'here5'                        
                         #if the count of the drawing that person drew to is not done, put out a new HIT
-                        if drawing.count < drawing.limit:
-                            launchHIT(mtc, str(drawing.key))
+                        if drawing.count < drawing.strokeLimit:
+                            newHit = launchHIT(mtc, str(drawing.key))
                             print 'here6'
-                            pageOfHits = mtc.search_hits()
-                            for page in pageOfHits:
-                                drawing.hitID = page.HITId
-                                drawing.put()
+                            #save over the old hit id with the new one
+                            drawing.hitID = newHit[0].HITId
                             print '++++++++++++++++++++++++++++++++++++++launched another'
-
                             #increment the drawing counter and save it
                             drawing.count+=1
-                            drawing.put()
-                            print 'here9'
+                        #save all the new drawing info
+                        drawing.put()
+                        print 'here9'
             
         except Exception as ex:
             print 'API call failed!'

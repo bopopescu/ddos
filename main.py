@@ -98,8 +98,8 @@ class NewDrawing(webapp2.RequestHandler):
             drawing.strokeLimit = strokeLimit
             drawing.put()
             
-            result = launchHIT(mtc, str(drawing.key()))
-            drawing.hitID = result[0].HITId
+            newHit = launchHIT(mtc, str(drawing.key()))
+            drawing.hitID = newHit[0].HITId
             drawing.put()
             
         except Exception as ex:
