@@ -8,10 +8,6 @@ handlers:
 - url: /static
   static_dir: static
 
-- url: /favicon\.ico
-  static_files: /favicon.ico
-  upload: /favicon\.ico
-
 - url: /polling
   script: pollCron.app
   login: admin
