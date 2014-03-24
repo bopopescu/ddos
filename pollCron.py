@@ -18,8 +18,8 @@ from google.appengine.ext import db
 import main
 #----------------------------- MTurk Connection ------------------------------#
 
-ACCESS_ID = 'AKIAJGYLVFH5HSDGHVZQ'
-SECRET_KEY = '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'
+ACCESS_ID = ''
+SECRET_KEY = ''
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
@@ -66,14 +66,23 @@ class Poll(webapp2.RequestHandler):
                 for drawing in query:
                     #if so, reject
                     if worker_id in drawing.blockedList:
+                        print 'worker is blocked'
                         #TODO: get list of all strokes with this drawing, and throw out the most recent
-                        query = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
-                        lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
-                        print lines
+                        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
+                        lines = [ast.literal_eval(stroke.lines[0]) for stroke in q]
                         
+                        stroke.lines = []
+                        for i in xrange(1,len(lines)):
+                            stroke.lines.append(lines[i])
+                        print 'lines deleted'
                         mtc.reject_assignment(ass_id)
                         mtc.dispose_hit(hitID)
-                        print 'here4'
+                        
+                        newHit = launchHIT(mtc, str(drawing.key()))
+                        print 'new hit launched'
+                        #save over the old hit id with the new one
+                        drawing.hitID = newHit[0].HITId
+                        drawing.put()
                     #otherwise, approve the work and add that name to the list of blocked
                     else:
                         print 'here3.0'
@@ -85,7 +94,8 @@ class Poll(webapp2.RequestHandler):
                         print 'here5'                        
                         #if the count of the drawing that person drew to is not done, put out a new HIT
                         if drawing.count < drawing.strokeLimit:
-                            newHit = launchHIT(mtc, str(drawing.key))
+                            print str(drawing.key())
+                            newHit = launchHIT(mtc, str(drawing.key()))
                             print 'here6'
                             #save over the old hit id with the new one
                             drawing.hitID = newHit[0].HITId

@@ -16,8 +16,8 @@ from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
 #----------------------------- MTurk Connection ------------------------------#
 
-ACCESS_ID = 'AKIAJGYLVFH5HSDGHVZQ'
-SECRET_KEY = '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'
+ACCESS_ID = ''
+SECRET_KEY = ''
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
