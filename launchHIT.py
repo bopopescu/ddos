@@ -77,7 +77,6 @@ def getInfo(mtc):
         #for assignment in assignments:
             #print assignment.WorkerId
             #print assignment.HITId
-        #for assignment in assignments:
             #mtc.reject_assignment(assignment.HITId)
         return assignments
 

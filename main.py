@@ -43,6 +43,7 @@ class Drawing(db.Model):
     count = db.IntegerProperty(default=0)
     strokeLimit = db.IntegerProperty(default=20)
     blockedList = db.StringListProperty(required=True)
+    hitID = db.StringProperty(default='x')
 
 class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing)
@@ -92,10 +93,23 @@ class NewDrawing(webapp2.RequestHandler):
         strokeLimit = int(self.request.POST[u'strokeLimit'])
         drawing = Drawing()
         drawing.strokeLimit = strokeLimit
+        
         drawing.put()
         key = drawing.key()
         launchHIT(mtc, str(key))
         #self.redirect('/'+str(key))
+        
+        try:
+            pageOfHits = mtc.search_hits()
+            #print pageOfHits.HITId
+            for page in pageOfHits:
+                #print page.HITId
+                drawing.hitID = page.HITId
+                drawing.put()
+                break
+        except Exception as e:
+            print "ERR in new drawing: should never happen"
+            pass
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
@@ -141,6 +155,7 @@ class DrawingPage(webapp2.RequestHandler):
 
         query = db.GqlQuery("SELECT * FROM Drawing WHERE __key__ = KEY('Drawing', :1)", drawing_id)
 
+        dataSent = json.loads(self.request.body)
         #there will always be only 1 drawing in query but this is the best way to access it
         for drawing in query:
             # need to check here if the turker has already done one for this drawing
@@ -161,6 +176,8 @@ class DrawingPage(webapp2.RequestHandler):
                 #here down might move - to a poll or something
                 drawing.count += 1
                 drawing.put()
+                stroke = Stroke()
+                stroke.counter = drawing
                 #save lines
                 for line in dataSent['lines']:
                     stroke.lines.append(json.dumps(dataSent['lines'][line]))

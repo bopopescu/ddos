@@ -38,26 +38,65 @@ logging.getLogger().setLevel(logging.DEBUG)
 #----------------------------- Models ----------------------------------------#
 class Poll(webapp2.RequestHandler):
     def get(self): 
-        print 'XXXXX  CRON v4  XXXXX'
+        print 'XXXXX  CRON v5  XXXXX'
         
         try:
-            #if the HIT is waiting for review, the call will succeed and continue (if 0 results, it will throw exception and do nothing
+            #if there is anything in reviewableHits, handle it
             reviewableHits = mtc.get_reviewable_hits()
+            print 'here1'
             #from here down, assume that there is a reviewable hit in reviewableHits
-            print 'size: ' + str(len(result))
-            #get the list of blocked ID's from the datastore
-            #check if the ID of the person awaiting approval is in the list
-            #if so, reject
-            #otherwise, approve the work and add that name to the list of blocked
-            #put the list back in datastore
-            #if the count of the drawing that person drew to is not done, put out a new HIT
-            #increment the drawing counter and save it
+            #may run many times (however many lines have been drawn and submitted since last poll)
+            for hit in reviewableHits:
+                worker_id = None
+                ass_id = None
+                hitID = hit.HITId
+                assignments = mtc.get_assignments(hit.HITId)
+                #only runs once "guaranteed"-ish
+                for assignment in assignments:
+                    worker_id = assignment.WorkerId
+                    ass_id = assignment.HITId
+                print 'here2'    
+                #print 'size: ' + str(len(result))
+                #get the list of blocked ID's from the datastore
+                query = db.GqlQuery("SELECT * FROM Drawing WHERE hitID = :1", hitID)
+                #check if the ID of the person awaiting approval is in the list
+                print 'here3'
+                for drawing in query:
+                    #if so, reject
+                    if worker_id in drawing.blockedList:
+                        #TODO: get lsit of all strokes with this drawing, and throw out the most recent
+                        mtc.reject_assignment(ass_id)
+                        mtc.dispose_hit(hitID)
+                        print 'here4'
+                    #otherwise, approve the work and add that name to the list of blocked
+                    else:
+                        mtc.approve_assignment(ass_id)
+                        print 'here3.1'
+                        mtc.dispose_hit(hitID)
+                        print 'here3.2'
+                        drawing.blockedList.append(str(worker_id))  
+                        print 'here5'                        
+                        #if the count of the drawing that person drew to is not done, put out a new HIT
+                        if drawing.count < drawing.limit:
+                            launchHIT(mtc, str(drawing.key))
+                            print 'here6'
+                            pageOfHits = mtc.search_hits()
+                            print 'here7'
+                            for page in pageOfHits:
+                                print page[0]
+                                print 'here8'
+                            drawing.hitID = page[0].HITId
+                            print '++++++++++++++++++++++++++++++++++++++launched another'
 
+                            #increment the drawing counter and save it
+                            drawing.count+=1
+                            drawing.put()
+                            print 'here9'
+                    
         except Exception as e:
             print 'API call failed!'
         
         finally:
-            pass
             print 'success'
 
 
