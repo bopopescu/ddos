@@ -16,8 +16,8 @@ from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
 #----------------------------- MTurk Connection ------------------------------#
 
-ACCESS_ID = 'AKIAJGYLVFH5HSDGHVZQ'
-SECRET_KEY = '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'
+ACCESS_ID = ''
+SECRET_KEY = ''
 HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
@@ -37,10 +37,14 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 #----------------------------- Models ----------------------------------------#
 class Poll(webapp2.RequestHandler):
-    def get(self):
-        #check if the HIT is submitted (do HTTP get request)
-        #if not, do nothing
-        #if it is:
+    def get(self): 
+        print 'XXXXX  CRON v4  XXXXX'
+        
+        try:
+            #if the HIT is waiting for review, the call will succeed and continue (if 0 results, it will throw exception and do nothing
+            reviewableHits = mtc.get_reviewable_hits()
+            #from here down, assume that there is a reviewable hit in reviewableHits
+            print 'size: ' + str(len(result))
             #get the list of blocked ID's from the datastore
             #check if the ID of the person awaiting approval is in the list
             #if so, reject
@@ -48,14 +52,6 @@ class Poll(webapp2.RequestHandler):
             #put the list back in datastore
             #if the count of the drawing that person drew to is not done, put out a new HIT
             #increment the drawing counter and save it
-        #delete this hit
-            
-        print 'XXXXX  CRON v3  XXXXX'
-        
-        try:
-            result = mtc.get_reviewable_hits()
-            print 'size: ' + str(len(result))
-            print result[0]
 
         except Exception as e:
             print 'API call failed!'
@@ -63,8 +59,6 @@ class Poll(webapp2.RequestHandler):
         finally:
             pass
             print 'success'
-            #if data != []:
-                #return json.loads(data)
 
 
 #--------------------------------- Routes ------------------------------------#
