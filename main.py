@@ -96,7 +96,6 @@ class NewDrawing(webapp2.RequestHandler):
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
-            drawing.put()
             
             newHit = launchHIT(mtc, str(drawing.key()))
             drawing.hitID = newHit[0].HITId
@@ -121,7 +120,7 @@ class DrawingPage(webapp2.RequestHandler):
         lines = []
         drawing = db.get(drawing_id)
         q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
-        lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
+        lines = json.dumps([json.loads(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
         template = JINJA_ENVIRONMENT.get_template('drawing.html')

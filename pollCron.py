@@ -68,12 +68,14 @@ class Poll(webapp2.RequestHandler):
                     if worker_id in drawing.blockedList:
                         print 'worker is blocked'
                         #TODO: get list of all strokes with this drawing, and throw out the most recent
-                        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
-                        lines = [ast.literal_eval(stroke.lines[0]) for stroke in q]
+                        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
+                        #for i in xrange(1, len(q)):
+                        for stroke in q:
+                            print stroke
+                            result = db.delete(stroke)
+                            print result
+                            break
                         
-                        stroke.lines = []
-                        for i in xrange(1,len(lines)):
-                            stroke.lines.append(lines[i])
                         print 'lines deleted'
                         mtc.reject_assignment(ass_id)
                         mtc.dispose_hit(hitID)
