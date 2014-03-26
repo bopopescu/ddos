@@ -94,16 +94,20 @@ class Poll(webapp2.RequestHandler):
                         print 'here3.2'
                         drawing.blockedList.append(str(worker_id))  
                         print 'here5'                        
+                        #increment the drawing counter and save it
+                        drawing.count+=1
                         #if the count of the drawing that person drew to is not done, put out a new HIT
                         if drawing.count < drawing.strokeLimit:
+                            print 'count: ', drawing.count
+                            print 'limit: ', drawing.strokeLimit
                             print str(drawing.key())
                             newHit = launchHIT(mtc, str(drawing.key()))
                             print 'here6'
                             #save over the old hit id with the new one
                             drawing.hitID = newHit[0].HITId
                             print '++++++++++++++++++++++++++++++++++++++launched another'
-                            #increment the drawing counter and save it
-                            drawing.count+=1
+                            
+                            
                         #save all the new drawing info
                         drawing.put()
                         print 'here9'

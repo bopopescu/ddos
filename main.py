@@ -79,7 +79,7 @@ class ViewDrawing(webapp2.RequestHandler):
         '''
         lines = []
         drawing = db.get(drawing_id)
-        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
+        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
         lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
@@ -96,6 +96,7 @@ class NewDrawing(webapp2.RequestHandler):
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
+            drawing.put()
             
             newHit = launchHIT(mtc, str(drawing.key()))
             drawing.hitID = newHit[0].HITId
@@ -119,7 +120,7 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         lines = []
         drawing = db.get(drawing_id)
-        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime",drawing)
+        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
         lines = json.dumps([json.loads(stroke.lines[0]) for stroke in q])
 
         context = {'lines':lines, 'drawing_id':drawing_id}
