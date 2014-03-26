@@ -40,12 +40,11 @@ logging.getLogger().setLevel(logging.DEBUG)
 #----------------------------- Models ----------------------------------------#
 class Poll(webapp2.RequestHandler):
     def get(self): 
-        print 'XXXXX  CRON v5  XXXXX'
+        print 'XXXXX  CRON v6  XXXXX'
         
         try:
             #if there is anything in reviewableHits, handle it
             reviewableHits = mtc.get_reviewable_hits()
-            print 'here1'
             #from here down, assume that there is a reviewable hit in reviewableHits
             #may run many times (however many lines have been drawn and submitted since last poll)
             for hit in reviewableHits:
@@ -56,21 +55,23 @@ class Poll(webapp2.RequestHandler):
                 #only runs once "guaranteed"-ish
                 for assignment in assignments:
                     worker_id = assignment.WorkerId
-                    ass_id = assignment.AssignmentId
-                print 'here2'    
-                #print 'size: ' + str(len(result))
+                    ass_id = assignment.AssignmentId 
                 #get the list of blocked ID's from the datastore
-                query = db.GqlQuery("SELECT * FROM Drawing WHERE hitID = :1", hitID)
+                #query = db.GqlQuery("SELECT * FROM Drawing WHERE hitID = :1", hitID)
+                query = db.GqlQuery("SELECT * FROM Drawing")
                 #check if the ID of the person awaiting approval is in the list
-                print 'here3'
                 for drawing in query:
+                    if drawing.hitID != hitID: continue
                     #if so, reject
                     if worker_id in drawing.blockedList:
                         print 'worker is blocked'
                         #TODO: get list of all strokes with this drawing, and throw out the most recent
-                        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
+                        q = db.GqlQuery("SELECT lines FROM Stroke")
+                        strokesList = list(q)
+                        sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
+                        sortedStrokesList.reverse()
                         #for i in xrange(1, len(q)):
-                        for stroke in q:
+                        for stroke in sortedStrokesList:
                             print stroke
                             result = db.delete(stroke)
                             print result
@@ -87,30 +88,25 @@ class Poll(webapp2.RequestHandler):
                         drawing.put()
                     #otherwise, approve the work and add that name to the list of blocked
                     else:
-                        print 'here3.0'
                         mtc.approve_assignment(ass_id)
-                        print 'here3.1'
                         mtc.dispose_hit(hitID)
-                        print 'here3.2'
-                        drawing.blockedList.append(str(worker_id))  
-                        print 'here5'                        
+                        drawing.blockedList.append(str(worker_id))                        
                         #increment the drawing counter and save it
                         drawing.count+=1
                         #if the count of the drawing that person drew to is not done, put out a new HIT
                         if drawing.count < drawing.strokeLimit:
                             print 'count: ', drawing.count
                             print 'limit: ', drawing.strokeLimit
-                            print str(drawing.key())
                             newHit = launchHIT(mtc, str(drawing.key()))
-                            print 'here6'
                             #save over the old hit id with the new one
                             drawing.hitID = newHit[0].HITId
                             print '++++++++++++++++++++++++++++++++++++++launched another'
-                            
+                        else:
+                            print 'drawing finished'
+                            drawing.finished = True
                             
                         #save all the new drawing info
                         drawing.put()
-                        print 'here9'
             
         except Exception as ex:
             print 'API call failed!'

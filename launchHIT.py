@@ -3,19 +3,13 @@ import datetime
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
-# ACCESS_ID = ''
-# SECRET_KEY = ''
-# HOST = 'mechanicalturk.sandbox.amazonaws.com'
-
-# mechTurkConn = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
-
 def launchHIT(mtc, drawing_id):
 
   title = 'Draw a single line on a canvas'
   description = ('Draw on a canvas')
   keywords = 'drawing, web'
   choices = [('done','done')]
-  drawing_id = "http://distributeddrawing.appspot.com/" + drawing_id
+  drawing_id = "http://2.distributeddrawing.appspot.com/" + drawing_id
   #------------------- Overview ---------------------
   overview_content = ('<p>Your task is to follow the link and draw a single line segment on a canvas.</p>'
                       '<p>When creating your translation, please follow these guidelines:</p>'

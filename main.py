@@ -38,17 +38,17 @@ logging.getLogger().setLevel(logging.DEBUG)
 #----------------------------- Models ----------------------------------------#
 
 class Drawing(db.Model):
-    finished = db.BooleanProperty(default=False)
+    finished = db.BooleanProperty(default=False, indexed=False)
     # blob = db.BlobProperty() # used to store file picture
-    count = db.IntegerProperty(default=0)
-    strokeLimit = db.IntegerProperty(default=20)
-    blockedList = db.StringListProperty(required=True, default=[])
-    hitID = db.StringProperty(default='x')
+    count = db.IntegerProperty(default=0, indexed=False)
+    strokeLimit = db.IntegerProperty(default=20, indexed=False)
+    blockedList = db.StringListProperty(required=True, default=[], indexed=False)
+    hitID = db.StringProperty(default='x', indexed=False)
 
 class Stroke(db.Model):
-    counter = db.ReferenceProperty(Drawing)
-    lines = db.StringListProperty(required=True)
-    datetime = db.DateTimeProperty(auto_now_add=True, required=True)
+    counter = db.ReferenceProperty(Drawing, indexed=False)
+    lines = db.StringListProperty(required=True, indexed=False)
+    datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
 
 #------------------------- Request Handlers ----------------------------------#
 
@@ -79,8 +79,20 @@ class ViewDrawing(webapp2.RequestHandler):
         '''
         lines = []
         drawing = db.get(drawing_id)
-        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
-        lines = json.dumps([ast.literal_eval(stroke.lines[0]) for stroke in q])
+        #q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1",drawing)
+        q = db.GqlQuery("SELECT lines FROM Stroke")
+        strokesList = list(q)
+        sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
+        sortedStrokesList.reverse()
+        
+        #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
+        lines = ''
+        linesList = []
+        for stroke in sortedStrokesList:
+            if strokes.counter == drawing:
+                linesList.append(ast.literal_eval(stroke.lines[0]))
+        lines = json.dumps(linesList)
+        
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(context))
@@ -120,8 +132,18 @@ class DrawingPage(webapp2.RequestHandler):
         '''
         lines = []
         drawing = db.get(drawing_id)
-        q = db.GqlQuery("SELECT lines FROM Stroke WHERE counter=:1 ORDER BY datetime DESC",drawing)
-        lines = json.dumps([json.loads(stroke.lines[0]) for stroke in q])
+        q = db.GqlQuery("SELECT lines FROM Stroke")
+        strokesList = list(q)
+        sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
+        sortedStrokesList.reverse()
+        
+        #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
+        lines = ''
+        linesList = []
+        for stroke in sortedStrokesList:
+            if strokes.counter == drawing:
+                linesList.append(ast.literal_eval(stroke.lines[0]))
+        lines = json.dumps(linesList)
 
         context = {'lines':lines, 'drawing_id':drawing_id}
         template = JINJA_ENVIRONMENT.get_template('drawing.html')
