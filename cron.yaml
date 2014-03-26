@@ -1,0 +1,4 @@
+cron:
+    - description: poll for any newly submitted hits
+      url: /polling
+      schedule: every 2 minutes

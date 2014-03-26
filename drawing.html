@@ -1,0 +1,165 @@
+<html>
+<head>
+    <title>DDoS Project</title>
+    <link rel="shortcut icon" href="/static/cav.ico">
+    <script src="/static/jquery-2.1.0.min.js"></script>
+</head>
+
+    <script type="text/javascript">
+        var canvas, ctx, mouseIsDown = false,
+            prevX = 0,
+            currX = 0,
+            prevY = 0,
+            currY = 0,
+            dot_flag = false,
+            preventResubmission = false;
+
+        var drawing_id = "{{ drawing_id }}";
+        var lines = {};
+        var old_lines = {};
+        var index = 0;
+
+        var x = "black", y = 2;
+
+        function init() {
+            canvas = document.getElementById('can');
+            ctx = canvas.getContext("2d");
+            w = canvas.width;
+            h = canvas.height;
+
+            //make the cursor not become a text cursor
+            canvas.onselectstart = function () { return false; } // ie
+            canvas.onmousedown = function () { return false; } // mozilla
+            
+            canvas.addEventListener("mousemove", function (e) {
+            findxy('move', e)
+            }, false);
+            canvas.addEventListener("mousedown", function (e) {
+                findxy('down', e)
+            }, false);
+            canvas.addEventListener("mouseup", function (e) {
+                findxy('up', e)
+            }, false);
+            canvas.addEventListener("mouseout", function (e) {
+                findxy('out', e)
+            }, false);
+            
+            /*
+            $('#idBox').bind('input', function(e){
+                canvas.addEventListener("mousemove", function (e) {
+                findxy('move', e)
+                }, false);
+                canvas.addEventListener("mousedown", function (e) {
+                    findxy('down', e)
+                }, false);
+                canvas.addEventListener("mouseup", function (e) {
+                    findxy('up', e)
+                }, false);
+                canvas.addEventListener("mouseout", function (e) {
+                    findxy('out', e)
+                }, false);
+            });
+            */
+            old_lines = JSON.parse('{{ lines|safe }}')
+            draw_old_lines();
+        }
+
+        function draw_old_lines() {
+            for (line in old_lines) {
+                var old_line = old_lines[line]
+                ctx.beginPath();
+                ctx.moveTo(parseInt(old_line.startX), parseInt(old_line.startY));
+                ctx.lineTo(parseInt(old_line.endX), parseInt(old_line.endY));
+                ctx.strokeStyle = x;
+                ctx.lineWidth = y;
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+
+        function draw() {
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(currX, currY);
+            ctx.strokeStyle = x;
+            ctx.lineWidth = y;
+            ctx.stroke();
+            ctx.closePath();
+            lines[index] = {"startX":prevX.toString(),
+                             "startY":prevY.toString(),
+                             "endX":currX.toString(),
+                             "endY":currY.toString()
+                            };
+            index = index + 1;
+        }
+
+function submit() {
+    $.ajax({
+        url:'/'+drawing_id,
+        type: 'post',
+        data: JSON.stringify(lines),
+        contentType:'application/json',
+        processData: false
+    }).done(function(responseData) {
+        document.write(responseData)
+    });
+}
+
+function findxy(action, e) {
+    if (action == 'down') {
+        prevX = currX;
+        prevY = currY;
+        currX = e.clientX - canvas.offsetLeft;
+        currY = e.clientY - canvas.offsetTop;
+
+            //this flag becomes false when click up or cursor leaves canvas, stops stroke
+            mouseIsDown = true;
+            //point is to draw at least one point even if the mouse is never moved (draws a dot)
+            dot_flag = true;
+            if (dot_flag) {
+                ctx.beginPath();
+                ctx.fillStyle = x;
+                ctx.fillRect(currX, currY, 2, 2);
+                ctx.closePath();
+                dot_flag = false;
+                lines[index] = {"startX":currX.toString(),
+                                 "startY":currY.toString(),
+                                 "endX":(currX+2).toString(),
+                                 "endY":(currY+2).toString()
+                                };
+                index = index + 1;
+            }
+    }
+    if ((action == "up" || action == "out") && !preventResubmission) {
+        if(mouseIsDown){
+            canvas.removeEventListener('mousemove', findxy);
+            canvas.removeEventListener('mouseup', findxy);
+            canvas.removeEventListener('mousedown', findxy);
+            canvas.removeEventListener('mouseout', findxy);
+            mouseIsDown = false;
+            preventResubmission = true;
+            submit();
+        }
+    }
+    if (action == 'move') {
+        if (mouseIsDown) {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft;
+            currY = e.clientY - canvas.offsetTop;
+            draw();
+        }
+    }
+}
+
+    </script>
+
+
+<body onload="init()">
+    <canvas id="can" width="400" height="400" style="position:absolute;top:10%;left:10%;border:2px solid;"></canvas>
+    <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
+    <!--input type="button" value="clear" id="clr" size="23" onclick="erase()" style="position:absolute;top:80%;left:15%;"-->
+    <!--input type="button" value="submit" id="sub" size="30" onclick="submit()" style="position:absolute;top:50%;left:50%;"-->
+    <!--input type="text" id="idBox" width="100" height="50" style="position:absolute;top:5%;left:15%;" ></input-->
+</body>
+</html>
