@@ -67,7 +67,7 @@ class Poll(webapp2.RequestHandler):
                     #reject the worker if no stroke was added to the image
                     elif drawing.strokeAdded == False:
                         print 'worker did not do work, relaunch hit' #no reason to block, just extra overhead without helping prevent them in future
-                        mtc.reject_assignment(ass_id)
+                        mtc.reject_assignment(ass_id, 'You did not follow directions: you must draw a stroke in order to be paid')
                         mtc.dispose_hit(hitID)
                         
                         newHit = launchHIT(mtc, str(drawing.key()))
@@ -92,7 +92,7 @@ class Poll(webapp2.RequestHandler):
                             break
                         
                         print 'lines deleted'
-                        mtc.reject_assignment(ass_id)
+                        mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
                         mtc.dispose_hit(hitID)
                         
                         newHit = launchHIT(mtc, str(drawing.key()))
