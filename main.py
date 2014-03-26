@@ -44,6 +44,7 @@ class Drawing(db.Model):
     strokeLimit = db.IntegerProperty(default=20, indexed=False)
     blockedList = db.StringListProperty(required=True, default=[], indexed=False)
     hitID = db.StringProperty(default='x', indexed=False)
+    strokeAdded = db.BooleanProperty(default=False, indexed=False)
 
 class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
@@ -157,12 +158,21 @@ class DrawingPage(webapp2.RequestHandler):
         self.redirect('/thanks', permanent=True)
         drawing = db.get(drawing_id)
         dataSent = json.loads(self.request.body)
-        stroke = Stroke()
-        stroke.counter = drawing
-        #save lines
-        for line in dataSent:
-            stroke.lines.append(json.dumps(dataSent[line]))
-        stroke.put()
+        
+        print 'number of lines = ', len(dataSent)
+        if len(dataSent) != 0:
+            drawing.strokeAdded = True
+            drawing.put() 
+            
+            stroke = Stroke()
+            stroke.counter = drawing
+            #save lines
+            for line in dataSent:
+                stroke.lines.append(json.dumps(dataSent[line]))
+            stroke.put()
+        else:
+            drawing.strokeAdded = False
+            drawing.put()
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):

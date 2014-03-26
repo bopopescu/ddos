@@ -29,5 +29,26 @@
         <tr><td colspan="3"><em>There are drawings in-progress</em></td></tr>
     {% endfor %}
     </table>
+    
+    </br></br>
+    
+    <h3>Completed Drawings</h3>
+    <table>
+        <tr>
+            <th>Drawing ID</th>
+            <th>Strokes</th>
+            <th>Link</th>
+        </tr>
+    {% for drawing in finished %}
+        <tr>
+            <td>{{ drawing.key() }}</td>
+            <td>{{ drawing.count }}</td>
+            <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
+        </tr>
+    {% else %}
+        <tr><td colspan="3"><em>There are no drawings that are complete</em></td></tr>
+    {% endfor %}
+    </table>
+    
 {# links to done drawings | saved pngs | link to gallery #}
 {% endblock content %}

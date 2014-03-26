@@ -5,21 +5,22 @@ from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,A
 
 def launchHIT(mtc, drawing_id):
 
-  title = 'Draw a single line on a canvas'
-  description = ('Draw on a canvas')
-  keywords = 'drawing, web'
+  title = 'Crowdsourced Art Research'
+  description = ('We need your help to make the best art possible!')
+  keywords = 'drawing, web, art, research, paint'
   choices = [('done','done')]
   drawing_id = "http://2.distributeddrawing.appspot.com/" + drawing_id
   #------------------- Overview ---------------------
-  overview_content = ('<p>Your task is to follow the link and draw a single line segment on a canvas.</p>'
-                      '<p>When creating your translation, please follow these guidelines:</p>'
+  overview_content = ("<p>Your task is to follow the link and draw a single line stroke in the box shown.  It's Easy! Just left-click in the box and drag your cursor around to create your stroke (just like in MS Paint).</p>"
+                      '<p>BUT...try to add something to the picture.  If the square is blank, start off the image with something cool.  If there is already an image going, add something that makes it better.</p>'
+                      '<p>Help us make some great drawings!</p>'
                       '<ul>'
-                      '<li><b>Follow the link provided. </b>  <a href=" ' + drawing_id + '" target="_blank">Click here</a> </li>'
+                      '<li><b>Get started: </b>  <a href=" ' + drawing_id + '" target="_blank">Click here</a> </li>'
                       '</ul>')
   
 
   overview = Overview()
-  overview.append_field('Title', 'Draw a line on a canvas in order to complete the task.')
+  overview.append_field('Title', 'Draw a line in the box to complete the task.')
   overview.append(FormattedContent( overview_content))
 
   #------------------- Question test ---------------------

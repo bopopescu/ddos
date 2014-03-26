@@ -61,9 +61,23 @@ class Poll(webapp2.RequestHandler):
                 query = db.GqlQuery("SELECT * FROM Drawing")
                 #check if the ID of the person awaiting approval is in the list
                 for drawing in query:
-                    if drawing.hitID != hitID: continue
+                    #filter the drawings by hitID (since we're not doing this in the query anymore)
+                    if drawing.hitID != hitID: pass
+                    
+                    #reject the worker if no stroke was added to the image
+                    elif drawing.strokeAdded == False:
+                        print 'worker did not do work, relaunch hit' #no reason to block, just extra overhead without helping prevent them in future
+                        mtc.reject_assignment(ass_id)
+                        mtc.dispose_hit(hitID)
+                        
+                        newHit = launchHIT(mtc, str(drawing.key()))
+                        print 'new hit launched'
+                        #save over the old hit id with the new one
+                        drawing.hitID = newHit[0].HITId
+                        drawing.put()
+                    
                     #if so, reject
-                    if worker_id in drawing.blockedList:
+                    elif worker_id in drawing.blockedList:
                         print 'worker is blocked'
                         #TODO: get list of all strokes with this drawing, and throw out the most recent
                         q = db.GqlQuery("SELECT lines FROM Stroke")
