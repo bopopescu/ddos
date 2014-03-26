@@ -45,6 +45,9 @@ class Drawing(db.Model):
     blockedList = db.StringListProperty(required=True, default=[], indexed=False)
     hitID = db.StringProperty(default='x', indexed=False)
     strokeAdded = db.BooleanProperty(default=False, indexed=False)
+    #added
+    payment = db.FloatProperty(default='0.00', indexed=False)
+    description = db.StringProperty(default='x', indexed=False)
 
 class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
@@ -85,7 +88,7 @@ class ViewDrawing(webapp2.RequestHandler):
         strokesList = list(q)
         sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
         sortedStrokesList.reverse()
-        
+
         #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
         lines = ''
         linesList = []
@@ -93,7 +96,7 @@ class ViewDrawing(webapp2.RequestHandler):
             if strokes.counter == drawing:
                 linesList.append(ast.literal_eval(stroke.lines[0]))
         lines = json.dumps(linesList)
-        
+
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(context))
@@ -103,24 +106,30 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         create new drawing and kick off new HIT chain
         '''
-        
+
         try:
-            
+
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
+            #added
+            payment = float(self.request.POST[u'payment'])
+            drawing.payment = payment
+            description = string(self.request.post[u'description'])
+            drawing.description = description
+            #end added
             drawing.put()
-            
-            newHit = launchHIT(mtc, str(drawing.key()))
+
+            newHit = launchHIT(mtc, str(drawing.key()), float(drawing.payment), str(drawing.description))
             drawing.hitID = newHit[0].HITId
             drawing.put()
-            
+
         except Exception as ex:
             print 'launch hit failed'
             template = "an exception of type {0} occured. \nArguments:{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             print message
-        
+
         finally:
             self.redirect('/dashboard')
 
@@ -137,7 +146,7 @@ class DrawingPage(webapp2.RequestHandler):
         strokesList = list(q)
         sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
         sortedStrokesList.reverse()
-        
+
         #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
         lines = ''
         linesList = []
@@ -158,12 +167,12 @@ class DrawingPage(webapp2.RequestHandler):
         self.redirect('/thanks', permanent=True)
         drawing = db.get(drawing_id)
         dataSent = json.loads(self.request.body)
-        
+
         print 'number of lines = ', len(dataSent)
         if len(dataSent) != 0:
             drawing.strokeAdded = True
-            drawing.put() 
-            
+            drawing.put()
+
             stroke = Stroke()
             stroke.counter = drawing
             #save lines

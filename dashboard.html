@@ -6,8 +6,11 @@
     <h3>Launch New Drawing</h3>
     <form action="/new" method="post">
         Stroke Limit <input name="strokeLimit" type="number">
+        Payment <input name="payment" type="number">
+        Description <input name="description" type="text">
         <input type="submit" value="New Drawing">
     </form>
+
     <br/>
     <hr/>
     <h3>Drawings In-Progress</h3>
@@ -16,39 +19,48 @@
             <th>Drawing ID</th>
             <th>Strokes</th>
             <th>Stroke Limit</th>
+            <th>Payment</th>
+            <th>Description</th>
             <th>Link</th>
+
         </tr>
     {% for drawing in in_progress %}
         <tr>
             <td>{{ drawing.key() }}</td>
             <td>{{ drawing.count }}</td>
             <td>{{ drawing.strokeLimit }}</td>
+            <td>{{ drawing.payment }}</td>
+            <td>{{ drawing.description}}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
         <tr><td colspan="3"><em>There are drawings in-progress</em></td></tr>
     {% endfor %}
     </table>
-    
+
     </br></br>
-    
+
     <h3>Completed Drawings</h3>
     <table>
         <tr>
             <th>Drawing ID</th>
             <th>Strokes</th>
+            <th>Payment</th>
+            <th>Description</th>
             <th>Link</th>
         </tr>
     {% for drawing in finished %}
         <tr>
             <td>{{ drawing.key() }}</td>
             <td>{{ drawing.count }}</td>
+            <td>{{ drawing.payment }}</td>
+            <td>{{ drawing.description }}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
         <tr><td colspan="3"><em>There are no drawings that are complete</em></td></tr>
     {% endfor %}
     </table>
-    
+
 {# links to done drawings | saved pngs | link to gallery #}
 {% endblock content %}

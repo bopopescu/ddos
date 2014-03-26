@@ -3,10 +3,10 @@ import datetime
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
-def launchHIT(mtc, drawing_id):
+def launchHIT(mtc, drawing_id, payment, description):
 
   title = 'Crowdsourced Art Research'
-  description = ('We need your help to make the best art possible!')
+  #description = ('We need your help to make the best art possible!')
   keywords = 'drawing, web, art, research, paint'
   choices = [('done','done')]
   drawing_id = "http://2.distributeddrawing.appspot.com/" + drawing_id
@@ -17,7 +17,7 @@ def launchHIT(mtc, drawing_id):
                       '<ul>'
                       '<li><b>Get started: </b>  <a href=" ' + drawing_id + '" target="_blank">Click here</a> </li>'
                       '</ul>')
-  
+
 
   overview = Overview()
   overview.append_field('Title', 'Draw a line in the box to complete the task.')
@@ -58,7 +58,7 @@ def launchHIT(mtc, drawing_id):
                  description=description,
                  keywords=keywords,
                  duration = 60*5,
-                 reward=0.01,
+                 reward=payment,
                  response_groups=['Minimal'])
 
 
