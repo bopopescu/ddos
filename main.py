@@ -1,10 +1,6 @@
-import os
-import urllib
-import cgi
 import json
 import ast
-import uuid
-import datetime
+import os
 
 import jinja2
 import webapp2
@@ -14,17 +10,6 @@ import boto
 from boto.mturk.connection import MTurkConnection
 from launchHIT import launchHIT, rejectTurker, approveTurker
 from google.appengine.ext import db
-#----------------------------- MTurk Connection ------------------------------#
-
-ACCESS_ID = ''
-SECRET_KEY = ''
-HOST = 'mechanicalturk.sandbox.amazonaws.com'
-
-if not boto.config.has_section('Boto'):
-    boto.config.add_section('Boto')
-boto.config.set('Boto', 'https_validate_certificates', 'False')
-
-mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
 #----------------------------- Config ----------------------------------------#
 
@@ -50,6 +35,23 @@ class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
     lines = db.StringListProperty(required=True, indexed=False)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
+
+class AMTConfig(db.Model):
+    access_id = db.StringProperty(indexed=False)
+    secret_key = db.StringProperty(indexed=False)
+
+#----------------------------- MTurk Connection ------------------------------#
+
+KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
+ACCESS_ID = db.get(KEY).access_id
+SECRET_KEY = db.get(KEY).secret_key
+HOST = 'mechanicalturk.sandbox.amazonaws.com'
+
+if not boto.config.has_section('Boto'):
+    boto.config.add_section('Boto')
+boto.config.set('Boto', 'https_validate_certificates', 'False')
+
+mtc = MTurkConnection(aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY, host=HOST)
 
 #------------------------- Request Handlers ----------------------------------#
 
@@ -85,7 +87,7 @@ class ViewDrawing(webapp2.RequestHandler):
         strokesList = list(q)
         sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
         sortedStrokesList.reverse()
-        
+
         #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
         lines = ''
         linesList = []
@@ -93,7 +95,7 @@ class ViewDrawing(webapp2.RequestHandler):
             if strokes.counter == drawing:
                 linesList.append(ast.literal_eval(stroke.lines[0]))
         lines = json.dumps(linesList)
-        
+
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(context))
@@ -103,24 +105,24 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         create new drawing and kick off new HIT chain
         '''
-        
+
         try:
-            
+
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
             drawing.put()
-            
+
             newHit = launchHIT(mtc, str(drawing.key()))
             drawing.hitID = newHit[0].HITId
             drawing.put()
-            
+
         except Exception as ex:
             print 'launch hit failed'
             template = "an exception of type {0} occured. \nArguments:{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             print message
-        
+
         finally:
             self.redirect('/dashboard')
 
@@ -137,7 +139,7 @@ class DrawingPage(webapp2.RequestHandler):
         strokesList = list(q)
         sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
         sortedStrokesList.reverse()
-        
+
         #lines = json.dumps([json.loads(stroke.lines[0]) for stroke in sortedStrokesList])
         lines = ''
         linesList = []
@@ -158,12 +160,12 @@ class DrawingPage(webapp2.RequestHandler):
         self.redirect('/thanks', permanent=True)
         drawing = db.get(drawing_id)
         dataSent = json.loads(self.request.body)
-        
+
         print 'number of lines = ', len(dataSent)
         if len(dataSent) != 0:
             drawing.strokeAdded = True
-            drawing.put() 
-            
+            drawing.put()
+
             stroke = Stroke()
             stroke.counter = drawing
             #save lines

@@ -1,4 +1,0 @@
-cron:
-- description: poll AMT for if the current HIT has been completed
-  url: /polling
-  schedule: every 48 hours
