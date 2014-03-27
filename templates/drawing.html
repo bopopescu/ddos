@@ -84,7 +84,8 @@
             ctx.lineWidth = y;
             ctx.stroke();
             ctx.closePath();
-            lines[index] = {"startX":prevX.toString(),
+            lines[index] = { "index":index.toString(),
+                             "startX":prevX.toString(),
                              "startY":prevY.toString(),
                              "endX":currX.toString(),
                              "endY":currY.toString()
@@ -121,10 +122,11 @@ function findxy(action, e) {
                 ctx.fillRect(currX, currY, 2, 2);
                 ctx.closePath();
                 dot_flag = false;
-                lines[index] = {"startX":currX.toString(),
-                                 "startY":currY.toString(),
-                                 "endX":(currX+2).toString(),
-                                 "endY":(currY+2).toString()
+                lines[index] = { "index":index.toString(),
+                                "startX":currX.toString(),
+                                "startY":currY.toString(),
+                                "endX":(currX+2).toString(),
+                                "endY":(currY+2).toString()
                                 };
                 index = index + 1;
             }

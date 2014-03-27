@@ -9,25 +9,30 @@
         var canvas, ctx = false;
         var canvas = document.getElementById('canvas');
         var ctx = canvas.getContext("2d");
-        var w = canvas.width;
-        var h = canvas.height;
-        var x = "black", y = 2;
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
 
-        $(function() {
-            var lines = JSON.parse('{{ lines|safe }}')
-            draw(lines);
+        var lines = JSON.parse('{{ lines|safe }}');
+        lines.sort(function(a, b){
+            return  b["id"] - a["id"] || a["index"] - b["index"];
         });
-        function draw(lines) {
-            for (k in lines) {
-                var line = lines[k]
-                ctx.beginPath();
-                ctx.moveTo(parseInt(line.startX), parseInt(line.startY));
-                ctx.lineTo(parseInt(line.endX), parseInt(line.endY));
-                ctx.strokeStyle = x;
-                ctx.lineWidth = y;
-                ctx.stroke();
-                ctx.closePath();
+
+        var k = 0;
+
+        function drawline () {
+            var line = lines[k];
+            ctx.beginPath();
+            ctx.moveTo(parseInt(line.startX), parseInt(line.startY));
+            ctx.lineTo(parseInt(line.endX), parseInt(line.endY));
+            ctx.stroke();
+            ctx.closePath();
+            k++;
+            if (k == lines.length) {
+                clearInterval(interval);
             }
         }
+        $(function(){
+            interval = setInterval("drawline()", 69);
+        });
     </script>
 {% endblock content %}

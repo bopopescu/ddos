@@ -9,7 +9,7 @@ from boto.mturk.connection import MTurkConnection
 from boto_wrapper import launchHIT
 from google.appengine.ext import db
 
-DEBUG = False
+DEBUG = True
 
 #----------------------------- Config ----------------------------------------#
 
@@ -91,13 +91,13 @@ class ViewDrawing(webapp2.RequestHandler):
         drawing = db.get(drawing_id)
         q = db.GqlQuery("SELECT * FROM Stroke")
 
-        # lines = json.dumps([(json.loads(line) for line in stroke.lines) for stroke in q if stroke.counter.key() == drawing.key()])
-
         lines = []
-        for stroke in q:
+        for idx,stroke in enumerate(q):
             if stroke.counter.key() == drawing.key():
                 for line in stroke.lines:
-                    lines.append(json.loads(line))
+                    l = json.loads(line)
+                    l[u'id'] = idx
+                    lines.append(l)
         lines = json.dumps(lines)
 
         context = {"drawing_id":drawing_id,"lines":lines}
@@ -121,9 +121,9 @@ class NewDrawing(webapp2.RequestHandler):
             #end added
             drawing.put()
 
-            newHit = launchHIT(mtc, str(drawing.key()), float(drawing.payment), str(drawing.description))
-            drawing.hitID = newHit[0].HITId
-            drawing.put()
+            # newHit = launchHIT(mtc, str(drawing.key()), float(drawing.payment), str(drawing.description))
+            # drawing.hitID = newHit[0].HITId
+            # drawing.put()
 
         except Exception as ex:
             print 'launch hit failed'
