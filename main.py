@@ -8,13 +8,13 @@ import logging
 
 import boto
 from boto.mturk.connection import MTurkConnection
-from launchHIT import launchHIT
+from boto_wrapper import launchHIT
 from google.appengine.ext import db
 
 #----------------------------- Config ----------------------------------------#
 
 JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
@@ -48,7 +48,7 @@ class AMTConfig(db.Model):
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
 ACCESS_ID = db.get(KEY).access_id
 SECRET_KEY = db.get(KEY).secret_key
-HOST = 'mechanicalturk.amazonaws.com'
+HOST = 'mechanicalturk.sandbox.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
     boto.config.add_section('Boto')
