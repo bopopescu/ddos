@@ -1,14 +1,12 @@
 import json
-import ast
 import os
-
 import jinja2
 import webapp2
 import logging
 
 import boto
 from boto.mturk.connection import MTurkConnection
-from launchHIT import launchHIT
+from boto_wrapper import launchHIT
 from google.appengine.ext import db
 
 #----------------------------- Config ----------------------------------------#
