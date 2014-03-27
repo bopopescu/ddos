@@ -9,6 +9,8 @@ from boto.mturk.connection import MTurkConnection
 from boto_wrapper import launchHIT
 from google.appengine.ext import db
 
+DEBUG = False
+
 #----------------------------- Config ----------------------------------------#
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -44,8 +46,13 @@ class AMTConfig(db.Model):
 #----------------------------- MTurk Connection ------------------------------#
 
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
-ACCESS_ID = ''#db.get(KEY).access_id
-SECRET_KEY = ''#db.get(KEY).secret_key
+if True:
+    ACCESS_ID = ''
+    SECRET_KEY = ''
+else:
+    ACCESS_ID = db.get(KEY).access_id
+    SECRET_KEY = db.get(KEY).secret_key
+
 HOST = 'mechanicalturk.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
