@@ -1,4 +1,4 @@
 cron:
     - description: poll for any newly submitted hits
       url: /polling
-      schedule: every 180 minutes
+      schedule: every 4 minutes

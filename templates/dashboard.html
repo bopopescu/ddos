@@ -5,10 +5,10 @@
     <hr/>
     <h3>Launch New Drawing</h3>
     <form action="/new" method="post">
-        Stroke Limit <input name="strokeLimit" type="number">
+        Stroke Limit <input name="strokeLimit" value='20' type="number">
         Payment <input name="payment" value='0.01' type="number">
         <br/>
-        Description <textarea rows="5" columns="5" name="description" >Default Desc</textarea>
+        Title <textarea rows="5" columns="5" name="title" >Add a single line to this drawing: easy!</textarea>
         <br/>
         <input type="submit" value="New Drawing">
     </form>
@@ -22,7 +22,7 @@
             <th>Strokes</th>
             <th>Stroke Limit</th>
             <th>Payment</th>
-            <th>Description</th>
+            <th>Title</th>
             <th>Link</th>
 
         </tr>
@@ -32,11 +32,11 @@
             <td>{{ drawing.count }}</td>
             <td>{{ drawing.strokeLimit }}</td>
             <td>{{ drawing.payment }}</td>
-            <td>{{ drawing.description}}</td>
+            <td>{{ drawing.title}}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
-        <tr><td colspan="3"><em>There are drawings in-progress</em></td></tr>
+        <tr><td colspan="3"><em>There are no drawings in-progress</em></td></tr>
     {% endfor %}
     </table>
 
@@ -48,7 +48,7 @@
             <th>Drawing ID</th>
             <th>Strokes</th>
             <th>Payment</th>
-            <th>Description</th>
+            <th>Title</th>
             <th>Link</th>
         </tr>
     {% for drawing in finished %}
@@ -56,7 +56,7 @@
             <td>{{ drawing.key() }}</td>
             <td>{{ drawing.count }}</td>
             <td>{{ drawing.payment }}</td>
-            <td>{{ drawing.description }}</td>
+            <td>{{ drawing.title }}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}

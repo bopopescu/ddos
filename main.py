@@ -1,20 +1,20 @@
 import json
+import ast
 import os
+
 import jinja2
 import webapp2
 import logging
 
 import boto
 from boto.mturk.connection import MTurkConnection
-from boto_wrapper import launchHIT
+from launchHIT import launchHIT
 from google.appengine.ext import db
-
-DEBUG = False
 
 #----------------------------- Config ----------------------------------------#
 
 JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
@@ -46,13 +46,8 @@ class AMTConfig(db.Model):
 #----------------------------- MTurk Connection ------------------------------#
 
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
-if True:
-    ACCESS_ID = ''
-    SECRET_KEY = ''
-else:
-    ACCESS_ID = db.get(KEY).access_id
-    SECRET_KEY = db.get(KEY).secret_key
-
+ACCESS_ID = db.get(KEY).access_id
+SECRET_KEY = db.get(KEY).secret_key
 HOST = 'mechanicalturk.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
@@ -78,6 +73,7 @@ class Dashboard(webapp2.RequestHandler):
                 finished.append(drawing)
             else:
                 in_progress.append(drawing)
+                #print 'count; ', drawing.count
 
         context = {"finished":finished,"in_progress":in_progress}
         template = JINJA_ENVIRONMENT.get_template('dashboard.html')
@@ -88,10 +84,9 @@ class ViewDrawing(webapp2.RequestHandler):
         '''
         simple read only view of a drawing (can be ongoing or finished)
         '''
+        lines = []
         drawing = db.get(drawing_id)
         q = db.GqlQuery("SELECT * FROM Stroke")
-
-        # lines = json.dumps([(json.loads(line) for line in stroke.lines) for stroke in q if stroke.counter.key() == drawing.key()])
 
         lines = []
         for stroke in q:
@@ -99,6 +94,8 @@ class ViewDrawing(webapp2.RequestHandler):
                 for line in stroke.lines:
                     lines.append(json.loads(line))
         lines = json.dumps(lines)
+
+        #print lines
 
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
@@ -109,15 +106,17 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         create new drawing and kick off new HIT chain
         '''
+
         try:
+
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
             #added
             payment = float(self.request.POST[u'payment'])
             drawing.payment = payment
-            description = str(self.request.POST[u'description'])
-            drawing.description = description
+            title = str(self.request.POST[u'title'])
+            drawing.description = title
             #end added
             drawing.put()
 
@@ -166,6 +165,7 @@ class DrawingPage(webapp2.RequestHandler):
         drawing = db.get(drawing_id)
         dataSent = json.loads(self.request.body)
 
+        print 'set stroke added true'
         drawing.strokeAdded = True
         drawing.put()
 
@@ -181,15 +181,15 @@ class ThanksPage(webapp2.RequestHandler):
         template_values = {}
         template = JINJA_ENVIRONMENT.get_template('thanks.html')
         self.response.write(template.render(template_values))
-
+        
 class Poll(webapp2.RequestHandler):
     def get(self):
         print 'XXXXX  CRON v6  XXXXX'
         try:
-
+            
             #if there is anything in reviewableHits, handle it
             reviewableHits = mtc.get_reviewable_hits()
-
+            
             #may run many times (however many lines have been drawn and submitted since last poll)
             for hit in reviewableHits:
                 print 'next reviewable hit'
@@ -202,6 +202,7 @@ class Poll(webapp2.RequestHandler):
                     worker_id = assignment.WorkerId
                     ass_id = assignment.AssignmentId
                 #get the list of blocked ID's from the datastore
+                #query = db.GqlQuery("SELECT * FROM Drawing WHERE hitID = :1", hitID)
                 query = db.GqlQuery("SELECT * FROM Drawing")
                 #check if the ID of the person awaiting approval is in the list
                 for drawing in query:
@@ -226,26 +227,20 @@ class Poll(webapp2.RequestHandler):
                             print 'worker is blocked'
                             #TODO: get list of all strokes with this drawing, and throw out the most recent
                             q = db.GqlQuery("SELECT * FROM Stroke")
-                            lines = []
+                            lastTime = datetime.date(2000,1,1)
+                            lastStroke = None
                             for stroke in q:
                                 if stroke.counter.key() == drawing.key():
-                                    for line in stroke.lines:
-                                        lines.append(json.loads(line))
-                            #for i in xrange(1, len(q)):
-                            lastTime = lines[0].datetime
-                            lastStroke = lines[0]
-                            for stroke in lines:
-                                #print stroke
-                                if stroke.datetime < lastTime:
-                                    lastTime = stroke.datetime
-                                    lastStroke = stroke
-
+                                    if stroke.datetime > lastTime:
+                                        lastTime = stroke.datetime
+                                        lastStroke = stroke
+                            
                             result = db.delete(lastStroke)
-
+                            
                             print 'lines deleted'
                             mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
                             mtc.dispose_hit(hitID)
-                            #change
+                            
                             newHit = launchHIT(mtc, str(drawing.key()), float(drawing.payment), str(drawing.description))
                             print 'new hit launched'
                             #save over the old hit id with the new one

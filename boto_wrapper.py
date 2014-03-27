@@ -3,11 +3,11 @@ import datetime
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import QuestionContent,Question,QuestionForm,Overview,AnswerSpecification,SelectionAnswer,FormattedContent,FreeTextAnswer,ExternalQuestion
 
-def launchHIT(mtc, drawing_id, payment, description):
+def launchHIT(mtc, drawing_id, payment, title):
 
-  title = 'Add a single line to this drawing: easy!'
+  #title = 'Add a single line to this drawing: easy!'
   description = ('We need your help to make the best art possible!')
-  keywords = 'drawing, web, art, research, paint, creative'
+  keywords = 'drawing, web, art, research, paint, creative, easy, simple, fast'
   choices = [('done','done')]
   drawing_id = "http://distributeddrawing.appspot.com/" + drawing_id
   #------------------- Overview ---------------------
