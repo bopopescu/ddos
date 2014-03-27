@@ -1,7 +1,6 @@
 <html>
 <head>
     <title>DDoS Project</title>
-    <link rel="shortcut icon" href="/static/cav.ico">
     <script src="/static/jquery-2.1.0.min.js"></script>
 </head>
 
@@ -30,7 +29,7 @@
             //make the cursor not become a text cursor
             canvas.onselectstart = function () { return false; } // ie
             canvas.onmousedown = function () { return false; } // mozilla
-            
+
             canvas.addEventListener("mousemove", function (e) {
             findxy('move', e)
             }, false);
@@ -43,7 +42,7 @@
             canvas.addEventListener("mouseout", function (e) {
                 findxy('out', e)
             }, false);
-            
+
             /*
             $('#idBox').bind('input', function(e){
                 canvas.addEventListener("mousemove", function (e) {
