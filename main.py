@@ -31,7 +31,7 @@ class Drawing(db.Model):
     hitID = db.StringProperty(default='x', indexed=False)
     strokeAdded = db.BooleanProperty(default=False, indexed=False)
     #added
-    payment = db.FloatProperty(default=0.00, indexed=False)
+    payment = db.FloatProperty(default=0.01, indexed=False)
     description = db.StringProperty(default='x', indexed=False)
 
 class Stroke(db.Model):
@@ -48,7 +48,7 @@ class AMTConfig(db.Model):
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
 ACCESS_ID = db.get(KEY).access_id
 SECRET_KEY = db.get(KEY).secret_key
-HOST = 'mechanicalturk.sandbox.amazonaws.com'
+HOST = 'mechanicalturk.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
     boto.config.add_section('Boto')
@@ -73,6 +73,7 @@ class Dashboard(webapp2.RequestHandler):
                 finished.append(drawing)
             else:
                 in_progress.append(drawing)
+                #print 'count; ', drawing.count
 
         context = {"finished":finished,"in_progress":in_progress}
         template = JINJA_ENVIRONMENT.get_template('dashboard.html')
@@ -114,7 +115,7 @@ class NewDrawing(webapp2.RequestHandler):
             #added
             payment = float(self.request.POST[u'payment'])
             drawing.payment = payment
-            description = string(self.request.post[u'description'])
+            description = str(self.request.POST[u'description'])
             drawing.description = description
             #end added
             drawing.put()
@@ -159,24 +160,21 @@ class DrawingPage(webapp2.RequestHandler):
         post the new stroke that the turker put on the canvas
         '''
 
+        #dont need to check if they drew something bec by definition making it here means something was drawn
         self.redirect('/thanks', permanent=True)
         drawing = db.get(drawing_id)
         dataSent = json.loads(self.request.body)
 
-        print 'number of lines = ', len(dataSent)
-        if len(dataSent) > 0:
-            drawing.strokeAdded = True
-            drawing.put()
+        print 'set stroke added true'
+        drawing.strokeAdded = True
+        drawing.put()
 
-            stroke = Stroke()
-            stroke.counter = drawing
-            #save lines
-            for line in dataSent:
-                stroke.lines.append(json.dumps(dataSent[line]))
-            stroke.put()
-        else:
-            drawing.strokeAdded = False
-            drawing.put()
+        stroke = Stroke()
+        stroke.counter = drawing
+        #save lines
+        for line in dataSent:
+            stroke.lines.append(json.dumps(dataSent[line]))
+        stroke.put()
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
@@ -188,11 +186,13 @@ class Poll(webapp2.RequestHandler):
     def get(self):
         print 'XXXXX  CRON v6  XXXXX'
         try:
+            
             #if there is anything in reviewableHits, handle it
             reviewableHits = mtc.get_reviewable_hits()
-            #from here down, assume that there is a reviewable hit in reviewableHits
+            
             #may run many times (however many lines have been drawn and submitted since last poll)
             for hit in reviewableHits:
+                print 'next reviewable hit'
                 worker_id = None
                 ass_id = None
                 hitID = hit.HITId
@@ -206,9 +206,10 @@ class Poll(webapp2.RequestHandler):
                 query = db.GqlQuery("SELECT * FROM Drawing")
                 #check if the ID of the person awaiting approval is in the list
                 for drawing in query:
+                    print 'next drawing'
                     #filter the drawings by hitID (since we're not doing this in the query anymore)
-                    if drawing.hitID != hitID:
-
+                    if drawing.hitID == hitID:
+                        print 'found matching drawing for hitID'
                         #reject the worker if no stroke was added to the image
                         if drawing.strokeAdded == False:
                             print 'worker did not do work, relaunch hit' #no reason to block, just extra overhead without helping prevent them in future
@@ -225,17 +226,23 @@ class Poll(webapp2.RequestHandler):
                         elif worker_id in drawing.blockedList:
                             print 'worker is blocked'
                             #TODO: get list of all strokes with this drawing, and throw out the most recent
-                            q = db.GqlQuery("SELECT lines FROM Stroke")
-                            strokesList = list(q)
-                            sortedStrokesList = sorted(strokesList, key=lambda strokesList: strokesList.datetime)
-                            sortedStrokesList.reverse()
+                            q = db.GqlQuery("SELECT * FROM Stroke")
+                            lines = []
+                            for stroke in q:
+                                if stroke.counter.key() == drawing.key():
+                                    for line in stroke.lines:
+                                        lines.append(json.loads(line))
                             #for i in xrange(1, len(q)):
-                            for stroke in sortedStrokesList:
-                                print stroke
-                                result = db.delete(stroke)
-                                print result
-                                break
-
+                            lastTime = lines[0].datetime
+                            lastStroke = lines[0]
+                            for stroke in lines:
+                                #print stroke
+                                if stroke.datetime < lastTime:
+                                    lastTime = stroke.datetime
+                                    lastStroke = stroke
+                            
+                            result = db.delete(lastStroke)
+                            
                             print 'lines deleted'
                             mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
                             mtc.dispose_hit(hitID)
@@ -244,14 +251,16 @@ class Poll(webapp2.RequestHandler):
                             print 'new hit launched'
                             #save over the old hit id with the new one
                             drawing.hitID = newHit[0].HITId
+                            drawing.strokeAdded = False
                             drawing.put()
                         #otherwise, approve the work and add that name to the list of blocked
                         else:
+                            print 'approve the work'
                             mtc.approve_assignment(ass_id)
                             mtc.dispose_hit(hitID)
                             drawing.blockedList.append(str(worker_id))
                             #increment the drawing counter and save it
-                            drawing.count+=1
+                            drawing.count += 1
                             #if the count of the drawing that person drew to is not done, put out a new HIT
                             if drawing.count < drawing.strokeLimit:
                                 print 'count: ', drawing.count
@@ -265,6 +274,8 @@ class Poll(webapp2.RequestHandler):
                                 drawing.finished = True
 
                             #save all the new drawing info
+                            drawing.strokeAdded = False
+                            print 'stroke added false: ', drawing.strokeAdded
                             drawing.put()
 
         except Exception as ex:
