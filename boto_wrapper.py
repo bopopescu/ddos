@@ -9,7 +9,7 @@ def launchHIT(mtc, drawing_id, payment, title):
   description = ('We need your help to make the best art possible!')
   keywords = 'drawing, web, art, research, paint, creative, easy, simple, fast'
   choices = [('done','done')]
-  drawing_id = "http://distributeddrawing.appspot.com/" + drawing_id
+  drawing_id = "http://2.distributeddrawing.appspot.com/" + drawing_id
   #------------------- Overview ---------------------
   overview_content = ("<p>Your task is to follow the link and draw a single line stroke in the box shown.  It's Easy! Just left-click in the box and drag your cursor around to create your stroke (just like in MS Paint).</p>"
                       '<p>BUT...try to add something to the picture.  If the square is blank, start off the image with something cool.  If there is already an image going, add something that makes it better.</p>'

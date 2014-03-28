@@ -39,7 +39,12 @@ class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
     lines = db.StringListProperty(required=True, indexed=False)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
-    removed = db.BooleanProperty(default=False, indexed=False)
+    
+class StrokeBuffer(db.Model):
+    counter = db.ReferenceProperty(Drawing, indexed=False)
+    lines = db.StringListProperty(required=True, indexed=False)
+    datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
+    status = db.StringProperty(default="pending approval", indexed=False)
 
 class AMTConfig(db.Model):
     access_id = db.StringProperty(indexed=False)
@@ -148,9 +153,7 @@ class DrawingPage(webapp2.RequestHandler):
 
         lines = []
         for stroke in q:
-            if stroke.removed:
-                db.delete_async(stroke)
-            elif stroke.counter.key() == drawing.key():
+            if stroke.counter.key() == drawing.key():
                 for line in stroke.lines:
                     lines.append(json.loads(line))
         lines = json.dumps(lines)
@@ -173,12 +176,13 @@ class DrawingPage(webapp2.RequestHandler):
         drawing.strokeAdded = True
         drawing.put()
 
-        stroke = Stroke()
-        stroke.counter = drawing
+        strokeBuffer = StrokeBuffer()
+        strokeBuffer.counter = drawing
+        #strokeBuffer.status is defaulted to "pending approval" bec this is only place strokeBuffer is created
         #save lines
         for line in dataSent:
-            stroke.lines.append(json.dumps(dataSent[line]))
-        stroke.put()
+            strokeBuffer.lines.append(json.dumps(dataSent[line]))
+        strokeBuffer.put()
 
 class ThanksPage(webapp2.RequestHandler):
     def get(self):
@@ -229,7 +233,7 @@ class Poll(webapp2.RequestHandler):
                         #if so, reject
                         elif worker_id in drawing.blockedList:
                             print 'worker is blocked'
-                            #TODO: get list of all strokes with this drawing, and throw out the most recent
+                            '''
                             q = db.GqlQuery("SELECT * FROM Stroke")
                             lastTime = datetime.datetime(2000,1,1, 1, 1, 1)
                             lastStroke = None
@@ -242,8 +246,16 @@ class Poll(webapp2.RequestHandler):
                             lastStroke.removed = True
                             lastStroke.put()
                             result = db.delete(lastStroke)
+                            '''
+                            q = db.GqlQuery("SELECT * FROM StrokeBuffer")
+                            for strokeBuffer in q:
+                                if strokeBuffer.counter.key() == drawing.key():
+                                    if strokeBuffer.status == "pending approval":
+                                        strokeBuffer.status = "rejected"
+                                        strokeBuffer.put()
+                                        db.delete(strokeBuffer)
                             
-                            print 'lines deleted'
+                            print 'lines not added'
                             mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
                             mtc.dispose_hit(hitID)
                             
@@ -255,6 +267,21 @@ class Poll(webapp2.RequestHandler):
                             drawing.put()
                         #otherwise, approve the work and add that name to the list of blocked
                         else:
+                            print 'add the buffered line to actual lines'
+                            q = db.GqlQuery("SELECT * FROM StrokeBuffer")
+                            for strokeBuffer in q:
+                                if strokeBuffer.counter.key() == drawing.key():
+                                    if strokeBuffer.status == "pending approval":
+                                        stroke = Stroke()
+                                        stroke.counter = strokeBuffer.counter
+                                        stroke.lines = strokeBuffer.lines
+                                        stroke.datetime = strokeBuffer.datetime
+                                        stroke.put()
+                                    
+                                        strokeBuffer.status = "approved"
+                                        strokeBuffer.put()
+                                        db.delete(strokeBuffer)
+                            
                             print 'approve the work'
                             mtc.approve_assignment(ass_id)
                             mtc.dispose_hit(hitID)
