@@ -6,7 +6,7 @@
     <h3>Launch New Drawing</h3>
     <form action="/new" method="post">
         Stroke Limit <input name="strokeLimit" value='20' type="number">
-        Payment <input name="payment" value='0.01' type="number">
+        Payment <input name="payment" value='0.01' type="number" min="0" step="0.01">
         <br/>
         Title <textarea rows="5" columns="5" name="title" >Add a single line to this drawing: easy!</textarea>
         <br/>
@@ -32,7 +32,7 @@
             <td>{{ drawing.count }}</td>
             <td>{{ drawing.strokeLimit }}</td>
             <td>{{ drawing.payment }}</td>
-            <td>{{ drawing.title}}</td>
+            <td>{{ drawing.description}}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
@@ -56,7 +56,7 @@
             <td>{{ drawing.key() }}</td>
             <td>{{ drawing.count }}</td>
             <td>{{ drawing.payment }}</td>
-            <td>{{ drawing.title }}</td>
+            <td>{{ drawing.description }}</td>
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}

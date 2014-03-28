@@ -1,6 +1,7 @@
 import json
 import ast
 import os
+import datetime
 
 import jinja2
 import webapp2
@@ -48,7 +49,7 @@ class AMTConfig(db.Model):
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
 ACCESS_ID = db.get(KEY).access_id
 SECRET_KEY = db.get(KEY).secret_key
-HOST = 'mechanicalturk.sandbox.amazonaws.com'
+HOST = 'mechanicalturk.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
     boto.config.add_section('Boto')
@@ -227,7 +228,7 @@ class Poll(webapp2.RequestHandler):
                             print 'worker is blocked'
                             #TODO: get list of all strokes with this drawing, and throw out the most recent
                             q = db.GqlQuery("SELECT * FROM Stroke")
-                            lastTime = datetime.date(2000,1,1)
+                            lastTime = datetime.datetime(2000,1,1, 1, 1, 1)
                             lastStroke = None
                             for stroke in q:
                                 if stroke.counter.key() == drawing.key():

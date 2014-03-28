@@ -58,7 +58,7 @@ def launchHIT(mtc, drawing_id, payment, title):
                  description=description,
                  keywords=keywords,
                  duration = 60*5,
-                 reward=0.01,
+                 reward=payment,
                  response_groups=['Minimal'])
 
 
