@@ -253,7 +253,7 @@ class Poll(webapp2.RequestHandler):
                                     if strokeBuffer.status == "pending approval":
                                         strokeBuffer.status = "rejected"
                                         strokeBuffer.put()
-                                        db.delete(strokeBuffer)
+                                        #db.delete(strokeBuffer)
                             
                             print 'lines not added'
                             mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
@@ -280,7 +280,7 @@ class Poll(webapp2.RequestHandler):
                                     
                                         strokeBuffer.status = "approved"
                                         strokeBuffer.put()
-                                        db.delete(strokeBuffer)
+                                        #db.delete(strokeBuffer)
                             
                             print 'approve the work'
                             mtc.approve_assignment(ass_id)
