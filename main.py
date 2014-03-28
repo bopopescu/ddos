@@ -39,6 +39,7 @@ class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
     lines = db.StringListProperty(required=True, indexed=False)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
+    removed = db.BooleanProperty(default=False, indexed=False)
 
 class AMTConfig(db.Model):
     access_id = db.StringProperty(indexed=False)
@@ -147,7 +148,9 @@ class DrawingPage(webapp2.RequestHandler):
 
         lines = []
         for stroke in q:
-            if stroke.counter.key() == drawing.key():
+            if stroke.removed:
+                db.delete_async(stroke)
+            elif stroke.counter.key() == drawing.key():
                 for line in stroke.lines:
                     lines.append(json.loads(line))
         lines = json.dumps(lines)
@@ -236,6 +239,8 @@ class Poll(webapp2.RequestHandler):
                                         lastTime = stroke.datetime
                                         lastStroke = stroke
                             
+                            lastStroke.removed = True
+                            lastStroke.put()
                             result = db.delete(lastStroke)
                             
                             print 'lines deleted'

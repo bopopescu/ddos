@@ -29,7 +29,7 @@ def launchHIT(mtc, drawing_id, payment, title):
 
   qc1 = QuestionContent()
   qc1.append_field('Title','Click on the submit button once you have finished the task.')
-  qc1.append(FormattedContent('The payment will not be authorized if you have not completed the task.'))
+  qc1.append(FormattedContent('The payment will not be authorized if you have not completed the task.  Also, you can only complete this task once (all subsequent submissions will be rejected).'))
 
   answers = SelectionAnswer(min=1, max=1,style='dropdown',
                         selections=choices,
