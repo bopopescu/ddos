@@ -221,6 +221,15 @@ class Poll(webapp2.RequestHandler):
                         #reject the worker if no stroke was added to the image
                         if drawing.strokeAdded == False:
                             print 'worker did not do work, relaunch hit' #no reason to block, just extra overhead without helping prevent them in future
+                            
+                            q = db.GqlQuery("SELECT * FROM StrokeBuffer")
+                            for strokeBuffer in q:
+                                if strokeBuffer.counter.key() == drawing.key():
+                                    if strokeBuffer.status == "pending approval":
+                                        strokeBuffer.status = "no line drawn"
+                                        strokeBuffer.put()
+                                        #db.delete(strokeBuffer)
+                            
                             mtc.reject_assignment(ass_id, 'You did not follow directions: you must draw a stroke in order to be paid')
                             mtc.dispose_hit(hitID)
 
@@ -269,6 +278,7 @@ class Poll(webapp2.RequestHandler):
                         else:
                             print 'add the buffered line to actual lines'
                             q = db.GqlQuery("SELECT * FROM StrokeBuffer")
+                            numStrokesAdded = 0
                             for strokeBuffer in q:
                                 if strokeBuffer.counter.key() == drawing.key():
                                     if strokeBuffer.status == "pending approval":
@@ -277,6 +287,7 @@ class Poll(webapp2.RequestHandler):
                                         stroke.lines = strokeBuffer.lines
                                         stroke.datetime = strokeBuffer.datetime
                                         stroke.put()
+                                        numStrokesAdded += 1
                                     
                                         strokeBuffer.status = "approved"
                                         strokeBuffer.put()
@@ -287,7 +298,7 @@ class Poll(webapp2.RequestHandler):
                             mtc.dispose_hit(hitID)
                             drawing.blockedList.append(str(worker_id))
                             #increment the drawing counter and save it
-                            drawing.count += 1
+                            drawing.count += numStrokesAdded
                             #if the count of the drawing that person drew to is not done, put out a new HIT
                             if drawing.count < drawing.strokeLimit:
                                 print 'count: ', drawing.count
