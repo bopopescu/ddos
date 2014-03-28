@@ -46,7 +46,7 @@ class AMTConfig(db.Model):
 #----------------------------- MTurk Connection ------------------------------#
 
 KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
-if True:
+if DEBUG:
     ACCESS_ID = ''
     SECRET_KEY = ''
 else:
@@ -102,6 +102,30 @@ class ViewDrawing(webapp2.RequestHandler):
 
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
+        self.response.write(template.render(context))
+
+class Gallery(webapp2.RequestHandler):
+    def get(self):
+        '''
+        gallery view of all finished drawings, mouse over to animate
+        '''
+        qd = db.GqlQuery("SELECT * FROM Drawing")
+        qs = db.GqlQuery("SELECT * FROM Stroke")
+        drawings = []
+        for d in qd:
+            drawing = {}
+            lines = []
+            for idx,stroke in enumerate(qs):
+                if stroke.counter.key() == d.key():
+                    for line in stroke.lines:
+                        l = json.loads(line)
+                        l[u'id'] = idx
+                        lines.append(l)
+            drawing['lines'] = json.dumps(lines)
+            drawings.append(drawing)
+
+        context = {"drawings":drawings}
+        template = JINJA_ENVIRONMENT.get_template('gallery.html')
         self.response.write(template.render(context))
 
 class NewDrawing(webapp2.RequestHandler):
@@ -294,6 +318,7 @@ app = webapp2.WSGIApplication([
     ('/new', NewDrawing),
     ('/thanks', ThanksPage),
     ('/polling', Poll),
+    ('/gallery', Gallery),
     ('/view/([^/]+)', ViewDrawing),
     ('/([^/]+)', DrawingPage)
 ], debug=True)
