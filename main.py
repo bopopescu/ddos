@@ -12,6 +12,8 @@ from boto.mturk.connection import MTurkConnection
 from boto_wrapper import launchHIT
 from google.appengine.ext import db
 
+DEBUG = False
+
 #----------------------------- Config ----------------------------------------#
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -52,10 +54,18 @@ class AMTConfig(db.Model):
 
 #----------------------------- MTurk Connection ------------------------------#
 
-KEY = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
-ACCESS_ID = db.get(KEY).access_id
-SECRET_KEY = db.get(KEY).secret_key
-HOST = 'mechanicalturk.amazonaws.com'
+ACCESS_ID  = None
+SECRET_KEY = None
+HOST       = None
+KEY        = 'ahRzfmRpc3RyaWJ1dGVkZHJhd2luZ3IWCxIJQU1UQ29uZmlnGICAgICg_YkJDA'
+if DEBUG:
+    ACCESS_ID  = ''
+    SECRET_KEY = ''
+    HOST       = 'mechanicalturk.sandbox.amazonaws.com'
+else:
+    ACCESS_ID  = db.get(KEY).access_id
+    SECRET_KEY = db.get(KEY).secret_key
+    HOST       = 'mechanicalturk.amazonaws.com'
 
 if not boto.config.has_section('Boto'):
     boto.config.add_section('Boto')
@@ -96,16 +106,40 @@ class ViewDrawing(webapp2.RequestHandler):
         q = db.GqlQuery("SELECT * FROM Stroke")
 
         lines = []
-        for stroke in q:
+        for idx,stroke in enumerate(q):
             if stroke.counter.key() == drawing.key():
                 for line in stroke.lines:
-                    lines.append(json.loads(line))
+                    l = json.loads(line)
+                    l[u'id'] = idx
+                    lines.append(l)
         lines = json.dumps(lines)
-
-        #print lines
 
         context = {"drawing_id":drawing_id,"lines":lines}
         template = JINJA_ENVIRONMENT.get_template('view.html')
+        self.response.write(template.render(context))
+
+class Gallery(webapp2.RequestHandler):
+    def get(self):
+        '''
+        gallery view of all finished drawings, mouse over to animate
+        '''
+        qd = db.GqlQuery("SELECT * FROM Drawing")
+        qs = db.GqlQuery("SELECT * FROM Stroke")
+        drawings = []
+        for d in qd:
+            drawing = {}
+            lines = []
+            for idx,stroke in enumerate(qs):
+                if stroke.counter.key() == d.key():
+                    for line in stroke.lines:
+                        l = json.loads(line)
+                        l[u'id'] = idx
+                        lines.append(l)
+            drawing['lines'] = json.dumps(lines)
+            drawings.append(drawing)
+
+        context = {"drawings":drawings}
+        template = JINJA_ENVIRONMENT.get_template('gallery.html')
         self.response.write(template.render(context))
 
 class NewDrawing(webapp2.RequestHandler):
@@ -113,17 +147,15 @@ class NewDrawing(webapp2.RequestHandler):
         '''
         create new drawing and kick off new HIT chain
         '''
-
         try:
-
             drawing = Drawing()
             strokeLimit = int(self.request.POST[u'strokeLimit'])
             drawing.strokeLimit = strokeLimit
             #added
             payment = float(self.request.POST[u'payment'])
             drawing.payment = payment
-            title = str(self.request.POST[u'title'])
-            drawing.description = title
+            description = str(self.request.POST[u'description'])
+            drawing.description = description
             #end added
             drawing.put()
 
@@ -189,15 +221,15 @@ class ThanksPage(webapp2.RequestHandler):
         template_values = {}
         template = JINJA_ENVIRONMENT.get_template('thanks.html')
         self.response.write(template.render(template_values))
-        
+
 class Poll(webapp2.RequestHandler):
     def get(self):
         print 'XXXXX  CRON v6  XXXXX'
         try:
-            
+
             #if there is anything in reviewableHits, handle it
             reviewableHits = mtc.get_reviewable_hits()
-            
+
             #may run many times (however many lines have been drawn and submitted since last poll)
             for hit in reviewableHits:
                 print 'next reviewable hit'
@@ -333,6 +365,7 @@ app = webapp2.WSGIApplication([
     ('/new', NewDrawing),
     ('/thanks', ThanksPage),
     ('/polling', Poll),
+    ('/gallery', Gallery),
     ('/view/([^/]+)', ViewDrawing),
     ('/([^/]+)', DrawingPage)
 ], debug=True)

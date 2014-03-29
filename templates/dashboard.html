@@ -36,7 +36,7 @@
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
-        <tr><td colspan="3"><em>There are no drawings in-progress</em></td></tr>
+        <tr><td colspan="6"><em>There are drawings in-progress</em></td></tr>
     {% endfor %}
     </table>
 
@@ -48,7 +48,7 @@
             <th>Drawing ID</th>
             <th>Strokes</th>
             <th>Payment</th>
-            <th>Title</th>
+            <th>Description</th>
             <th>Link</th>
         </tr>
     {% for drawing in finished %}
@@ -60,7 +60,7 @@
             <td><a href="/view/{{ drawing.key() }}" target="_blank">view</a></td>
         </tr>
     {% else %}
-        <tr><td colspan="3"><em>There are no drawings that are complete</em></td></tr>
+        <tr><td colspan="5"><em>There are no drawings that are complete</em></td></tr>
     {% endfor %}
     </table>
 

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Gallery{% endblock title %}
+{% block content %}
+    <h1>gallery</h1>
+    {% for drawing in drawings %}
+        <canvas id="{{ "canvas" ~ loop.index0 }}" width="400" height="400" style="border:2px solid;"></canvas>
+        <!-- load scripts -->
+        <script type="text/javascript">
+            var {{"interval" ~ loop.index0}};
+            var {{"canvas" ~ loop.index0}}, {{"ctx" ~ loop.index0}} = false;
+            var {{"canvas" ~ loop.index0}} = document.getElementById('{{ "canvas" ~ loop.index0 }}');
+            var {{"ctx" ~ loop.index0}} = {{"canvas" ~ loop.index0}}.getContext("2d");
+            {{"ctx" ~ loop.index0}}.strokeStyle = "black";
+            {{"ctx" ~ loop.index0}}.lineWidth = 2;
+
+            var {{"lines" ~ loop.index0}} = JSON.parse('{{ drawing.lines|safe }}');
+            {{"lines" ~ loop.index0}}.sort(function(a, b){
+                return  b["id"] - a["id"] || a["index"] - b["index"];
+            });
+
+            var {{"k" ~ loop.index0}} = 0;
+
+            function {{"draw_line" ~ loop.index0}} () {
+                var line = {{"lines" ~ loop.index0}}[{{"k" ~ loop.index0}}];
+                {{"ctx" ~ loop.index0}}.beginPath();
+                {{"ctx" ~ loop.index0}}.moveTo(parseInt(line.startX), parseInt(line.startY));
+                {{"ctx" ~ loop.index0}}.lineTo(parseInt(line.endX), parseInt(line.endY));
+                {{"ctx" ~ loop.index0}}.stroke();
+                {{"ctx" ~ loop.index0}}.closePath();
+                {{"k" ~ loop.index0}}++;
+                if ({{"k" ~ loop.index0}} == {{"lines" ~ loop.index0}}.length) {
+                    clearInterval({{"interval" ~ loop.index0}});
+                }
+            }
+            function {{"draw_all" ~ loop.index0}} () {
+                for (var i=0;i<{{"lines" ~ loop.index0}}.length;i++) {
+                    var line = {{"lines" ~ loop.index0}}[i];
+                    {{"ctx" ~ loop.index0}}.beginPath();
+                    {{"ctx" ~ loop.index0}}.moveTo(parseInt(line.startX), parseInt(line.startY));
+                    {{"ctx" ~ loop.index0}}.lineTo(parseInt(line.endX), parseInt(line.endY));
+                    {{"ctx" ~ loop.index0}}.stroke();
+                    {{"ctx" ~ loop.index0}}.closePath();
+                }
+            }
+            function {{"clear" ~ loop.index0}} () {
+                clearInterval({{"interval" ~ loop.index0}});
+                {{"k" ~ loop.index0}} = 0;
+                // Store the current transformation matrix
+                {{"ctx" ~ loop.index0}}.save();
+
+                // Use the identity matrix while clearing the canvas
+                {{"ctx" ~ loop.index0}}.setTransform(1, 0, 0, 1, 0, 0);
+                {{"ctx" ~ loop.index0}}.clearRect(0, 0, {{"canvas" ~ loop.index0}}.width, {{"canvas" ~ loop.index0}}.height);
+
+                // Restore the transform
+                {{"ctx" ~ loop.index0}}.restore();
+            }
+            $(function(){
+                {{"draw_all" ~ loop.index0}}();
+                $("{{"#canvas" ~ loop.index0}}").mouseover(function(){
+                    {{"clear" ~ loop.index0}}();
+                    {{"interval" ~ loop.index0}} = setInterval("{{"draw_line" ~ loop.index0}}()", 90);
+                });
+                $("{{"#canvas" ~ loop.index0}}").mouseout(function(){
+                    {{"clear" ~ loop.index0}}();
+                    {{"draw_all" ~ loop.index0}}();
+                });
+            });
+        </script>
+    {% endfor %}
+{% endblock content %}
