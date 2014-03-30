@@ -8,7 +8,7 @@ This application was built using the Google App Engine SDK. Using the latest SDK
 * change the DEBUG flag at line 16 of main.py to TRUE
 * insert your AMT credentials on lines 63 & 64
 * change the HOST flag to be mechanicalturk.sandbox.amazonaws.com or mechanicalturk.amazonaws.com
-* deploy to your own GAE instance 
+* deploy to your own GAE instance at https://appengine.google.com/
 
 Once deployed:
 * navigate to /dashboard
