@@ -82,7 +82,7 @@ class Dashboard(webapp2.RequestHandler):
         send form for creating new drawing, progess on all other drawings and
         ended jobs for viewing. the form should have a pre-filled field for the drawing id.
         '''
-        
+
         #bring in this block to write new secret key and access ID
         '''
         conf = AMTConfig()
@@ -90,7 +90,7 @@ class Dashboard(webapp2.RequestHandler):
         conf.secret_key = SECRET_KEY
         conf.put()
         '''
-        
+
         q = db.GqlQuery("SELECT * FROM Drawing")
         finished = []
         in_progress = []
@@ -373,7 +373,7 @@ class Poll(webapp2.RequestHandler):
 #--------------------------------- Routes ------------------------------------#
 
 app = webapp2.WSGIApplication([
-    ('/dashboard', Dashboard),
+    ('/', Dashboard),
     ('/new', NewDrawing),
     ('/thanks', ThanksPage),
     ('/polling', Poll),

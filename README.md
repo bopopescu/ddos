@@ -1,7 +1,7 @@
 ddos | Distributed Drawing of Strokes
 =====================================
 * Thomas Klingshirn, Eduardo Cirilo, Garrett Listi
-* live site: http://distributeddrawing.appspot.com/dashboard
+* live site: http://distributeddrawing.appspot.com/
 
 To Test/Deploy
 --------------
@@ -12,7 +12,7 @@ This application was built using the Google App Engine SDK. Using the latest SDK
 * deploy to your own GAE instance at https://appengine.google.com/
 
 Once deployed:
-* navigate to /dashboard
+* navigate to the root of the site
 * enter a desired stroke limit, HIT title, and payment per HIT
 
 After creating the drawing on the dashboard, the HIT chain will begin. The drawing will be viewable throughout the process. Once the drawing has been completed, it will move to the Completed Drawings table, and be viewable in the Gallery. 
