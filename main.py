@@ -82,6 +82,15 @@ class Dashboard(webapp2.RequestHandler):
         send form for creating new drawing, progess on all other drawings and
         ended jobs for viewing. the form should have a pre-filled field for the drawing id.
         '''
+        
+        #bring in this block to write new secret key and access ID
+        '''
+        conf = AMTConfig()
+        conf.access_id = ACCESS_ID
+        conf.secret_key = SECRET_KEY
+        conf.put()
+        '''
+        
         q = db.GqlQuery("SELECT * FROM Drawing")
         finished = []
         in_progress = []
@@ -129,21 +138,17 @@ class Gallery(webapp2.RequestHandler):
         qs = db.GqlQuery("SELECT * FROM Stroke")
         drawings = []
         for d in qd:
-            if d.finished:
-                drawing = {}
-                lines = []
-                for stroke in qs:
-                    if stroke.counter.key() == d.key():
-                        dt = time.mktime(stroke.datetime.timetuple())*1000
-                        for line in stroke.lines:
-                            l = json.loads(line)
-                            l[u'date'] = dt
-                            lines.append(l)
-                drawing['lines'] = json.dumps(lines)
-                drawing['artists'] = d.strokeLimit
-                drawing['description'] = d.description
-                drawing['payment'] = d.payment
-                drawings.append(drawing)
+            drawing = {}
+            lines = []
+            for stroke in qs:
+                if stroke.counter.key() == d.key():
+                    dt = time.mktime(stroke.datetime.timetuple())*1000
+                    for line in stroke.lines:
+                        l = json.loads(line)
+                        l[u'date'] = dt
+                        lines.append(l)
+            drawing['lines'] = json.dumps(lines)
+            drawings.append(drawing)
 
         context = {"drawings":drawings}
         template = JINJA_ENVIRONMENT.get_template('gallery.html')
