@@ -1,6 +1,7 @@
 ddos | Distributed Drawing of Strokes
 =====================================
 * Thomas Klingshirn, Eduardo Cirilo, Garrett Listi
+* live stie: http://distributeddrawing.appspot.com
 
 To Test/Deploy
 --------------
