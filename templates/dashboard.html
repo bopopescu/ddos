@@ -5,16 +5,24 @@
     <hr/>
     <h3>Launch New Drawing</h3>
     <form action="/new" method="post">
-        Stroke Limit <input name="strokeLimit" value='20' type="number">
-        Payment <input name="payment" value='0.01' type="number" min="0" step="0.01">
-        <br/>
-        Title <textarea rows="5" columns="5" name="description" >Add a single line to this drawing: easy!</textarea>
-        <br/>
-        <input type="submit" value="New Drawing">
+        <div class="center">
+            <label for="strokeLimit">Stroke Limit</label>
+            <input name="strokeLimit" value='20' type="number">
+            <label for="payment">Payment</label>
+            <input name="payment" value='0.01' type="number" min="0" step="0.01">
+            <br/>
+            <br/>
+            <div class="formfield">
+                <label for="description">HIT Description</label>
+                <textarea rows="5" columns="5" name="description" >Add a single line to this drawing: easy!</textarea>
+            </div>
+            <br/>
+            <input type="submit" value="New Drawing">
+        </div>
     </form>
 
-    <br/>
-    <hr/>
+    <br/><hr/>
+
     <h3>Drawings In-Progress</h3>
     <table>
         <tr>
@@ -40,9 +48,9 @@
     {% endfor %}
     </table>
 
-    </br></br>
+    </br><hr/>
 
-    <h3>Completed Drawings</h3>
+    <h3>Completed Drawings | <a href="/gallery" target="_blank">Gallery</a></h3>
     <table>
         <tr>
             <th>Drawing ID</th>

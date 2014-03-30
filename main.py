@@ -129,17 +129,21 @@ class Gallery(webapp2.RequestHandler):
         qs = db.GqlQuery("SELECT * FROM Stroke")
         drawings = []
         for d in qd:
-            drawing = {}
-            lines = []
-            for stroke in qs:
-                if stroke.counter.key() == d.key():
-                    dt = time.mktime(stroke.datetime.timetuple())*1000
-                    for line in stroke.lines:
-                        l = json.loads(line)
-                        l[u'date'] = dt
-                        lines.append(l)
-            drawing['lines'] = json.dumps(lines)
-            drawings.append(drawing)
+            if d.finished:
+                drawing = {}
+                lines = []
+                for stroke in qs:
+                    if stroke.counter.key() == d.key():
+                        dt = time.mktime(stroke.datetime.timetuple())*1000
+                        for line in stroke.lines:
+                            l = json.loads(line)
+                            l[u'date'] = dt
+                            lines.append(l)
+                drawing['lines'] = json.dumps(lines)
+                drawing['artists'] = d.strokeLimit
+                drawing['description'] = d.description
+                drawing['payment'] = d.payment
+                drawings.append(drawing)
 
         context = {"drawings":drawings}
         template = JINJA_ENVIRONMENT.get_template('gallery.html')

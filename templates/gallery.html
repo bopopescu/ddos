@@ -1,9 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Gallery{% endblock title %}
 {% block content %}
-    <h1>gallery</h1>
+    <h1>Gallery</h1>
+    <div class="center">
     {% for drawing in drawings %}
-        <canvas id="{{ "canvas" ~ loop.index0 }}" width="400" height="400" style="border:2px solid;"></canvas>
+        <p>
+            <canvas id="{{ "canvas" ~ loop.index0 }}" width="400" height="400" class="canvas"></canvas>
+            <h5>{{ drawing.description }}</h5>
+            {{ drawing.artists}} artists<br/>
+             ${{ drawing.payment }} per stroke
+        </p>
+
         <!-- load scripts -->
         <script type="text/javascript">
             var {{"interval" ~ loop.index0}};
@@ -67,5 +74,9 @@
                 });
             });
         </script>
+        <p class="buffer"></p>
+    {% else %}
+        <h3>There are 0 finished drawings to view.</h3>
     {% endfor %}
+</div>
 {% endblock content %}
