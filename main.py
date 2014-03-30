@@ -2,6 +2,7 @@ import json
 import ast
 import os
 import datetime
+import time
 
 import jinja2
 import webapp2
@@ -41,7 +42,7 @@ class Stroke(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
     lines = db.StringListProperty(required=True, indexed=False)
     datetime = db.DateTimeProperty(auto_now_add=True, required=True, indexed=False)
-    
+
 class StrokeBuffer(db.Model):
     counter = db.ReferenceProperty(Drawing, indexed=False)
     lines = db.StringListProperty(required=True, indexed=False)
@@ -106,11 +107,12 @@ class ViewDrawing(webapp2.RequestHandler):
         q = db.GqlQuery("SELECT * FROM Stroke")
 
         lines = []
-        for idx,stroke in enumerate(q):
+        for stroke in q:
             if stroke.counter.key() == drawing.key():
+                dt = time.mktime(stroke.datetime.timetuple())*1000
                 for line in stroke.lines:
                     l = json.loads(line)
-                    l[u'id'] = idx
+                    l[u'date'] = dt
                     lines.append(l)
         lines = json.dumps(lines)
 
@@ -129,11 +131,12 @@ class Gallery(webapp2.RequestHandler):
         for d in qd:
             drawing = {}
             lines = []
-            for idx,stroke in enumerate(qs):
+            for stroke in qs:
                 if stroke.counter.key() == d.key():
+                    dt = time.mktime(stroke.datetime.timetuple())*1000
                     for line in stroke.lines:
                         l = json.loads(line)
-                        l[u'id'] = idx
+                        l[u'date'] = dt
                         lines.append(l)
             drawing['lines'] = json.dumps(lines)
             drawings.append(drawing)
@@ -253,7 +256,7 @@ class Poll(webapp2.RequestHandler):
                         #reject the worker if no stroke was added to the image
                         if drawing.strokeAdded == False:
                             print 'worker did not do work, relaunch hit' #no reason to block, just extra overhead without helping prevent them in future
-                            
+
                             q = db.GqlQuery("SELECT * FROM StrokeBuffer")
                             for strokeBuffer in q:
                                 if strokeBuffer.counter.key() == drawing.key():
@@ -261,7 +264,7 @@ class Poll(webapp2.RequestHandler):
                                         strokeBuffer.status = "no line drawn"
                                         strokeBuffer.put()
                                         #db.delete(strokeBuffer)
-                            
+
                             mtc.reject_assignment(ass_id, 'You did not follow directions: you must draw a stroke in order to be paid')
                             mtc.dispose_hit(hitID)
 
@@ -283,7 +286,7 @@ class Poll(webapp2.RequestHandler):
                                     if stroke.datetime > lastTime:
                                         lastTime = stroke.datetime
                                         lastStroke = stroke
-                            
+
                             lastStroke.removed = True
                             lastStroke.put()
                             result = db.delete(lastStroke)
@@ -295,11 +298,11 @@ class Poll(webapp2.RequestHandler):
                                         strokeBuffer.status = "rejected"
                                         strokeBuffer.put()
                                         #db.delete(strokeBuffer)
-                            
+
                             print 'lines not added'
                             mtc.reject_assignment(ass_id, 'You can only do this job once per drawing')
                             mtc.dispose_hit(hitID)
-                            
+
                             newHit = launchHIT(mtc, str(drawing.key()), float(drawing.payment), str(drawing.description))
                             print 'new hit launched'
                             #save over the old hit id with the new one
@@ -320,11 +323,11 @@ class Poll(webapp2.RequestHandler):
                                         stroke.datetime = strokeBuffer.datetime
                                         stroke.put()
                                         numStrokesAdded += 1
-                                    
+
                                         strokeBuffer.status = "approved"
                                         strokeBuffer.put()
                                         #db.delete(strokeBuffer)
-                            
+
                             print 'approve the work'
                             mtc.approve_assignment(ass_id)
                             mtc.dispose_hit(hitID)

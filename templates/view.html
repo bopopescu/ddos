@@ -13,7 +13,7 @@
 
         var lines = JSON.parse('{{ lines|safe }}');
         lines.sort(function(a, b){
-            return  b["id"] - a["id"] || a["index"] - b["index"];
+            return  new Date(a["date"]) - new Date(b["date"]) || a["index"] - b["index"];
         });
 
         var k = 0;
