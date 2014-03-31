@@ -148,6 +148,9 @@ class Gallery(webapp2.RequestHandler):
                         l[u'date'] = dt
                         lines.append(l)
             drawing['lines'] = json.dumps(lines)
+            drawing['artists'] = d.strokeLimit
+            drawing['payment'] = d.payment
+            drawing['description'] = d.description
             drawings.append(drawing)
 
         context = {"drawings":drawings}
