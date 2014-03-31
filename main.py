@@ -185,7 +185,7 @@ class NewDrawing(webapp2.RequestHandler):
             print message
 
         finally:
-            self.redirect('/dashboard')
+            self.redirect('/')
 
 class DrawingPage(webapp2.RequestHandler):
     def get(self, drawing_id):
